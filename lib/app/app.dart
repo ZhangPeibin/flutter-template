@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/config/app_config.dart';
 import '../core/providers/app_config_provider.dart';
-import '../features/home/presentation/home_page.dart';
+import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
 class TemplateApp extends ConsumerWidget {
@@ -13,12 +13,12 @@ class TemplateApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(appConfigProvider);
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: config.appName,
       debugShowCheckedModeBanner: config.environment != AppEnvironment.prod,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      home: const HomePage(),
+      routerConfig: appRouter,
     );
   }
 }
