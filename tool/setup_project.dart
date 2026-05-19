@@ -60,7 +60,7 @@ void main(List<String> args) {
     '.vscode/launch.json',
     'config/dev.json',
     'config/staging.json',
-    'config/prod.json',
+    'config/prod.example.json',
     'android/app/build.gradle.kts',
     'android/app/src/main/AndroidManifest.xml',
     'ios/Runner/Info.plist',

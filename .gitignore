@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local production env (may contain secrets). Seed it from config/prod.example.json.
+/config/prod.json

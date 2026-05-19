@@ -118,7 +118,18 @@ make run-dev
 
 - `config/dev.json`
 - `config/staging.json`
-- `config/prod.json`
+- `config/prod.example.json`（模板，已提交）
+- `config/prod.json`（本地实际生效的生产配置，**已 gitignore**，可包含密钥）
+
+首次拉取项目后，执行下面任意一条命令生成本地 `config/prod.json`：
+
+```bash
+make bootstrap
+# 或者手动：
+cp config/prod.example.json config/prod.json
+```
+
+`make run-prod` 已自动调用 `bootstrap`，所以如果你只用 `make run-prod` 也无需手动复制。
 
 `APP_NAME` 会影响 Flutter 页面里读取 `AppConfig.appName` 的位置，例如 `MaterialApp.title` 和首页标题。Android Launcher 与 iOS Home Screen 显示名来自平台配置，需要通过 `tool/setup_project.dart` 或手动修改 Android `android:label`、iOS `CFBundleDisplayName`。
 
@@ -127,9 +138,10 @@ make run-dev
 | 命令 | 作用 |
 | --- | --- |
 | `make get` | 执行 `flutter pub get` |
+| `make bootstrap` | 若不存在，则从 `config/prod.example.json` 生成 `config/prod.json` |
 | `make run-dev` | 以 `APP_ENV=dev` 启动 |
 | `make run-staging` | 以 `APP_ENV=staging` 启动 |
-| `make run-prod` | 以 `APP_ENV=prod` 和 release 模式启动 |
+| `make run-prod` | 自动执行 `bootstrap`，以 `APP_ENV=prod` 和 release 模式启动 |
 | `make analyze` | 执行 `flutter analyze` |
 | `make test` | 执行 `flutter test` |
 | `make clean` | 执行 `flutter clean` |
