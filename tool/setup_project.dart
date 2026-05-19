@@ -57,6 +57,10 @@ void main(List<String> args) {
   final files = <String>{
     'pubspec.yaml',
     'README.md',
+    '.vscode/launch.json',
+    'config/dev.json',
+    'config/staging.json',
+    'config/prod.json',
     'android/app/build.gradle.kts',
     'android/app/src/main/AndroidManifest.xml',
     'ios/Runner/Info.plist',
@@ -83,6 +87,7 @@ void main(List<String> args) {
   }
 
   _deleteIfExists(File('flutter_template.iml'));
+  _deleteIfExists(Directory('.idea'));
   _deleteIfExists(File('android/flutter_template_android.iml'));
   _deleteIfExists(Directory('android/.idea'));
 
@@ -255,7 +260,7 @@ class _Options {
 
 const _usage = '''
 Usage:
-  dart run tool/rename_template.dart \\
+  dart run tool/setup_project.dart \\
     --project-name my_app \\
     --display-name "My App" \\
     --android-package com.example.my_app \\

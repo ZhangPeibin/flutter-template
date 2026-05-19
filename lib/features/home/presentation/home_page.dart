@@ -25,7 +25,7 @@ class HomePage extends StatelessWidget {
                 Icon(Icons.flutter_dash, size: 72, color: colorScheme.primary),
                 const SizedBox(height: 24),
                 Text(
-                  'Flutter Template',
+                  config.appName,
                   style: textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),

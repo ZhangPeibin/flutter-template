@@ -13,8 +13,7 @@ void main() {
 
     await tester.pumpWidget(const TemplateApp(config: config));
 
-    expect(find.text('Test App'), findsOneWidget);
-    expect(find.text('Flutter Template'), findsOneWidget);
+    expect(find.text('Test App'), findsNWidgets(2));
     expect(find.text('Environment: '), findsOneWidget);
     expect(find.text('dev'), findsOneWidget);
     expect(find.text('https://api.test'), findsOneWidget);

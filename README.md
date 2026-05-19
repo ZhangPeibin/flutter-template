@@ -43,7 +43,7 @@ lib/
 2. 执行重命名脚本
 
    ```bash
-   dart run tool/rename_template.dart \
+   dart run tool/setup_project.dart \
      --project-name my_app \
      --display-name "My App" \
      --android-package com.xxx.my_app \
@@ -103,15 +103,58 @@ flutter pub get
 flutter run
 ```
 
+也可以使用 `Makefile` 里的快捷命令：
+
+```bash
+make get
+make run-dev
+```
+
 ## 多环境配置
 
-模板通过 `--dart-define` 注入环境配置：
+模板通过 `--dart-define-from-file` 注入环境配置，并提供了 `Makefile` 与 VS Code 启动配置。
+
+环境配置文件：
+
+- `config/dev.json`
+- `config/staging.json`
+- `config/prod.json`
+
+`APP_NAME` 会影响 Flutter 页面里读取 `AppConfig.appName` 的位置，例如 `MaterialApp.title` 和首页标题。Android Launcher 与 iOS Home Screen 显示名来自平台配置，需要通过 `tool/setup_project.dart` 或手动修改 Android `android:label`、iOS `CFBundleDisplayName`。
+
+### Makefile 命令
+
+| 命令 | 作用 |
+| --- | --- |
+| `make get` | 执行 `flutter pub get` |
+| `make run-dev` | 以 `APP_ENV=dev` 启动 |
+| `make run-staging` | 以 `APP_ENV=staging` 启动 |
+| `make run-prod` | 以 `APP_ENV=prod` 和 release 模式启动 |
+| `make analyze` | 执行 `flutter analyze` |
+| `make test` | 执行 `flutter test` |
+| `make clean` | 执行 `flutter clean` |
+
+常用运行命令：
+
+```bash
+make run-dev
+make run-staging
+make run-prod
+```
+
+如需修改 App 名或接口地址，直接编辑对应环境的 JSON 文件。
+
+VS Code 运行：
+
+- `Flutter Dev`
+- `Flutter Staging`
+- `Flutter Prod`
+
+手动运行：
 
 ```bash
 flutter run \
-  --dart-define=APP_NAME="Demo App" \
-  --dart-define=APP_ENV=dev \
-  --dart-define=API_BASE_URL=https://api.example.com
+  --dart-define-from-file=config/dev.json
 ```
 
 当前支持的 `APP_ENV`：

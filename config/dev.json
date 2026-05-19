@@ -1,0 +1,5 @@
+{
+  "APP_NAME": "Flutter Template",
+  "APP_ENV": "dev",
+  "API_BASE_URL": "https://api-dev.example.com"
+}
