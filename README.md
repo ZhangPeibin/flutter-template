@@ -182,10 +182,13 @@ flutter analyze
 flutter test
 ```
 
+## 状态管理
+
+模板已接入 `flutter_riverpod`。`lib/main.dart` 在启动时创建 `AppConfig`，并通过 `ProviderScope` 覆盖 `lib/core/providers/app_config_provider.dart` 中的 `appConfigProvider`。页面可以使用 `ref.watch(appConfigProvider)` 读取运行时配置。
+
 ## 后续扩展方向
 
 - 接入 `go_router` 统一路由。
-- 接入 `riverpod` 作为状态管理和依赖注入方案。
 - 封装 `dio` 网络层和错误处理。
 - 增加 Android flavor 与 iOS scheme。
 - 增加 Mason 模板，用于生成 feature、page、service 和 model。
