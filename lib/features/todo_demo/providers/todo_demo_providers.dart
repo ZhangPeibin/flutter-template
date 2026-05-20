@@ -10,12 +10,12 @@ final todoApiProvider = Provider<TodoApi>((ref) {
   return TodoApi(dio);
 });
 
-final todoRepositoryProvider = Provider<TodoRepository>((ref) {
+final todoRepositoryProvider = Provider<TodoRepository>(retry: (_, _) => null,(ref) {
   final api = ref.watch(todoApiProvider);
   return TodoRepository(api);
 });
 
-final demoTodoProvider = FutureProvider<Todo>((ref) {
+final demoTodoProvider = FutureProvider<Todo>(retry: (_, _) => null, (ref) {
   final repository = ref.watch(todoRepositoryProvider);
   return repository.fetchTodo(1);
 });

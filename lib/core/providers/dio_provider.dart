@@ -23,8 +23,8 @@ final dioProvider = Provider<Dio>((ref) {
   );
 
   dio.interceptors
-    ..add(DioLoggingInterceptor(logger))
-    ..add(ErrorInterceptor());
+    ..add(ErrorInterceptor())
+    ..add(DioLoggingInterceptor(logger));
 
   return dio;
 });
