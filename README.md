@@ -34,6 +34,13 @@ lib/
     settings/
       presentation/
         settings_page.dart
+    todo_demo/
+      data/
+        api/
+        repositories/
+      domain/
+      presentation/
+      providers/
   main.dart
 ```
 
@@ -203,10 +210,144 @@ flutter test
 
 ## 路由
 
-模板已接入 `go_router`。路由定义集中在 `lib/app/router/app_router.dart`，`TemplateApp` 使用 `MaterialApp.router` 作为统一入口。`HomePage` 通过 `context.pushNamed(AppRouteNames.settings)` 演示命名路由跳转，未匹配到的路径会显示 `NotFoundPage`。
+模板已接入 `go_router`。路由定义集中在 `lib/app/router/app_router.dart`，`TemplateApp` 使用 `MaterialApp.router` 作为统一入口。`HomePage` 通过 `context.pushNamed(...)` 演示命名路由跳转，未匹配到的路径会显示 `NotFoundPage`。
+
+新增页面路由示例：
+
+```dart
+class AppRoutePaths {
+  static const profile = '/profile';
+}
+
+class AppRouteNames {
+  static const profile = 'profile';
+}
+
+GoRoute(
+  path: AppRoutePaths.profile,
+  name: AppRouteNames.profile,
+  builder: (context, state) => const ProfilePage(),
+)
+```
+
+页面跳转示例：
+
+```dart
+context.pushNamed(AppRouteNames.profile);
+```
+
+如果需要传 path parameter：
+
+```dart
+context.pushNamed(
+  AppRouteNames.profile,
+  pathParameters: {'id': userId},
+);
+```
+
+## 网络
+
+模板已接入 `dio`。`lib/core/providers/dio_provider.dart` 中的 `dioProvider` 会读取 `appConfigProvider`，并使用 `AppConfig.apiBaseUrl` 作为 `BaseOptions.baseUrl`。它也会读取 `loggerProvider`，通过 `DioLoggingInterceptor` 统一记录 request、response 和 error。`todo_demo` feature 使用 JSONPlaceholder 的 `/todos/1` 演示 API layer、repository layer、provider 和页面状态。
+
+Demo feature 结构：
+
+- `lib/core/network/dio_logging_interceptor.dart`：通过 `AppLogger` 记录 Dio 请求、响应和错误。
+- `lib/features/todo_demo/data/api/todo_api.dart`：负责 Dio 请求和 `DioException` 到 `ApiException` 的转换。
+- `lib/features/todo_demo/data/repositories/todo_repository.dart`：调用 API layer，并把 JSON 转成 domain model。
+- `lib/features/todo_demo/providers/todo_demo_providers.dart`：组装 API、repository 和 `FutureProvider`。
+- `lib/features/todo_demo/presentation/todo_demo_page.dart`：展示 loading、data、error 状态。
+
+Repository 示例：
+
+```dart
+class UserRepository {
+  const UserRepository(this._dio);
+
+  final Dio _dio;
+
+  Future<User> fetchUser(String id) async {
+    final response = await _dio.get<Map<String, dynamic>>('/users/$id');
+    return User.fromJson(response.data!);
+  }
+}
+
+final userRepositoryProvider = Provider<UserRepository>((ref) {
+  final dio = ref.watch(dioProvider);
+  return UserRepository(dio);
+});
+```
+
+错误处理示例：
+
+```dart
+try {
+  final user = await ref.read(userRepositoryProvider).fetchUser('123');
+} on DioException catch (error) {
+  final apiException = error.error;
+
+  if (apiException is ApiException) {
+    // 根据 apiException.type / statusCode 做业务处理。
+  }
+}
+```
+
+## 日志
+
+模板已接入 `logger`，并通过 `lib/core/logging/app_logger.dart` 暴露 `AppLogger` 抽象。业务代码应通过 `lib/core/providers/logger_provider.dart` 中的 `loggerProvider` 获取日志能力，避免直接依赖具体日志 SDK，方便后续替换为 `sentry_flutter` 或其他实现。
+
+当前 `logger` 实现：
+
+- `lib/core/logging/app_logger.dart`：定义项目自己的日志接口。
+- `lib/core/logging/console_app_logger.dart`：把 `AppLogger` 转接到 `logger` package，用于本地控制台日志。
+- `lib/core/providers/logger_provider.dart`：创建并暴露当前日志实现。
+- `lib/core/network/dio_logging_interceptor.dart`：让 Dio 使用 `loggerProvider` 记录网络日志。
+
+如果要把日志 SDK 切换为 `logger` package，做法是：
+
+1. 在 `pubspec.yaml` 添加 `logger`。
+2. 实现一个 `AppLogger` 的适配器，例如 `ConsoleAppLogger`。
+3. 在 `loggerProvider` 中返回新的适配器。
+4. 业务代码继续使用 `ref.read(loggerProvider)` 或 `ref.watch(loggerProvider)`，不要直接创建 `Logger()`。
+
+如果以后要从 `logger` 切换到其他 SDK，只需要新增一个实现 `AppLogger` 的适配器，并替换 `loggerProvider` 中返回的对象。Dio 会继续通过 `loggerProvider` 记录网络日志，不需要改业务代码。
+
+业务代码示例：
+
+```dart
+final logger = ref.read(loggerProvider);
+
+logger.info('Settings page opened');
+logger.error(
+  'Failed to load user profile',
+  error: error,
+  stackTrace: stackTrace,
+);
+```
+
+切换实现示例：
+
+```dart
+class MySdkAppLogger implements AppLogger {
+  const MySdkAppLogger(this._sdk);
+
+  final MyLoggingSdk _sdk;
+
+  @override
+  void info(String message, {Object? error, StackTrace? stackTrace}) {
+    _sdk.logInfo(message);
+  }
+
+  // 继续实现 debug、warning、error。
+}
+
+final loggerProvider = Provider<AppLogger>((ref) {
+  return MySdkAppLogger(MyLoggingSdk());
+});
+```
 
 ## 后续扩展方向
 
-- 封装 `dio` 网络层和错误处理。
+- 封装 repository、service 和统一错误处理。
+- 接入 `sentry_flutter` 作为生产错误上报。
 - 增加 Android flavor 与 iOS scheme。
 - 增加 Mason 模板，用于生成 feature、page、service 和 model。
