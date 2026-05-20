@@ -9,8 +9,6 @@
 - 提供清晰的目录结构，方便后续扩展路由、网络、状态管理和设计系统。
 - 作为多个业务项目的起点，而不是绑定单一业务。
 
-
-
 ## 目录结构
 
 ```text
@@ -24,6 +22,22 @@ lib/
   core/
     config/
       app_config.dart
+    logging/
+      app_logger.dart
+      console_app_logger.dart
+    network/
+      api_exception.dart
+      dio_logging_interceptor.dart
+      error_interceptor.dart
+    providers/
+      app_config_provider.dart
+      dio_provider.dart
+      key_value_storage_provider.dart
+      logger_provider.dart
+      secure_storage_provider.dart
+    storage/
+      key_value_storage.dart
+      secure_storage.dart
   features/
     home/
       presentation/
@@ -31,9 +45,6 @@ lib/
     not_found/
       presentation/
         not_found_page.dart
-    settings/
-      presentation/
-        settings_page.dart
     todo_demo/
       data/
         api/
@@ -43,8 +54,6 @@ lib/
       providers/
   main.dart
 ```
-
-
 
 ## 从模板创建新项目
 
@@ -83,7 +92,7 @@ lib/
 
    注意：脚本需要在 Flutter 项目根目录执行，并且新名字不能包含旧模板名或旧包名。
 
-3. 清理IDE残留文件
+3. 清理 IDE 残留文件
 
    ```bash
    flutter clean
@@ -107,7 +116,7 @@ lib/
    dart run tool/init_git.dart --commit --message "Initial commit"
    ```
 
-6. 重新打开IDE
+6. 重新打开 IDE
 
 
 
@@ -344,6 +353,100 @@ final loggerProvider = Provider<AppLogger>((ref) {
   return MySdkAppLogger(MyLoggingSdk());
 });
 ```
+
+## 本地存储
+
+模板预置了两套存储抽象，业务代码应通过 Riverpod 注入它们，不直接依赖具体实现。
+
+| 抽象 | 文件 | 默认实现 | 适用场景 |
+| --- | --- | --- | --- |
+| `KeyValueStorage` | `lib/core/storage/key_value_storage.dart` | `SharedPreferencesKeyValueStorage`（`shared_preferences`） | 非敏感的偏好设置：主题、语言、引导页状态等 |
+| `SecureStorage` | `lib/core/storage/secure_storage.dart` | `FlutterSecureStorageAdapter`（`flutter_secure_storage`） | 敏感数据：access token、refresh token、凭证等 |
+
+### Provider
+
+- `lib/core/providers/key_value_storage_provider.dart`：暴露 `keyValueStorageProvider` 和 `sharedPreferencesProvider`。
+- `lib/core/providers/secure_storage_provider.dart`：暴露 `secureStorageProvider`。
+
+`lib/main.dart` 在启动时 `await SharedPreferences.getInstance()`，并通过 `ProviderScope.overrides` 注入到 `sharedPreferencesProvider`。测试可以用 `SharedPreferences.setMockInitialValues({...})` 覆盖。
+
+### 基础用法
+
+```dart
+final prefs = ref.read(keyValueStorageProvider);
+await prefs.setString('locale', 'zh_CN');
+
+final secure = ref.read(secureStorageProvider);
+await secure.write('access_token', token);
+final token = await secure.read('access_token');
+```
+
+### 页面中保存非敏感配置
+
+```dart
+class LocaleButton extends ConsumerWidget {
+  const LocaleButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FilledButton(
+      onPressed: () async {
+        final storage = ref.read(keyValueStorageProvider);
+        await storage.setString('locale', 'zh_CN');
+      },
+      child: const Text('Use Chinese'),
+    );
+  }
+}
+```
+
+### Repository 中保存和读取 token
+
+```dart
+class AuthRepository {
+  const AuthRepository(this._secureStorage);
+
+  final SecureStorage _secureStorage;
+
+  Future<void> saveToken(String token) {
+    return _secureStorage.write('access_token', token);
+  }
+
+  Future<String?> readToken() {
+    return _secureStorage.read('access_token');
+  }
+
+  Future<void> signOut() {
+    return _secureStorage.delete('access_token');
+  }
+}
+
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AuthRepository(ref.watch(secureStorageProvider));
+});
+```
+
+### 测试中覆盖 `SharedPreferences`
+
+```dart
+testWidgets('reads locale from storage', (tester) async {
+  SharedPreferences.setMockInitialValues({'locale': 'zh_CN'});
+  final prefs = await SharedPreferences.getInstance();
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: const TemplateApp(),
+    ),
+  );
+});
+```
+
+### 替换底层实现
+
+切换底层实现时，只需新增一个实现 `KeyValueStorage` 或 `SecureStorage` 的类，并在对应的 provider 中返回它，业务代码无须改动。
 
 ## 后续扩展方向
 
