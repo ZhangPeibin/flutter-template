@@ -29,5 +29,15 @@ void main() {
     expect(find.text('Environment: '), findsOneWidget);
     expect(find.text('dev'), findsOneWidget);
     expect(find.text('https://api.test'), findsOneWidget);
+    expect(find.text('Open settings'), findsOneWidget);
+
+    await tester.tap(find.text('Open settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Settings'), findsNWidgets(2));
+    expect(
+      find.text('This page demonstrates named-route navigation with go_router.'),
+      findsOneWidget,
+    );
   });
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../core/providers/app_config_provider.dart';
 
 class HomePage extends ConsumerWidget {
@@ -38,11 +40,25 @@ class HomePage extends ConsumerWidget {
                 const SizedBox(height: 24),
                 _InfoTile(label: 'Environment', value: config.environment.name),
                 _InfoTile(label: 'API Base URL', value: config.apiBaseUrl),
+                const SizedBox(height: 24),
+                const _SettingsNavigationButton(),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SettingsNavigationButton extends StatelessWidget {
+  const _SettingsNavigationButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: () => context.pushNamed(AppRouteNames.settings),
+      child: const Text('Open settings'),
     );
   }
 }

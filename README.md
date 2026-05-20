@@ -28,6 +28,12 @@ lib/
     home/
       presentation/
         home_page.dart
+    not_found/
+      presentation/
+        not_found_page.dart
+    settings/
+      presentation/
+        settings_page.dart
   main.dart
 ```
 
@@ -156,6 +162,13 @@ make run-staging
 make run-prod
 ```
 
+如果 `make run-dev` 无法接收热重载输入，可以直接运行 Flutter 命令：
+
+```bash
+flutter run --dart-define-from-file=config/dev.json
+flutter run --dart-define-from-file=config/staging.json
+```
+
 如需修改 App 名或接口地址，直接编辑对应环境的 JSON 文件。
 
 VS Code 运行：
@@ -190,7 +203,7 @@ flutter test
 
 ## 路由
 
-模板已接入 `go_router`。路由定义集中在 `lib/app/router/app_router.dart`，`TemplateApp` 使用 `MaterialApp.router` 作为统一入口。
+模板已接入 `go_router`。路由定义集中在 `lib/app/router/app_router.dart`，`TemplateApp` 使用 `MaterialApp.router` 作为统一入口。`HomePage` 通过 `context.pushNamed(AppRouteNames.settings)` 演示命名路由跳转，未匹配到的路径会显示 `NotFoundPage`。
 
 ## 后续扩展方向
 
