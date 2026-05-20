@@ -2,20 +2,19 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/home/presentation/home_page.dart';
 import '../../features/not_found/presentation/not_found_page.dart';
-import '../../features/settings/presentation/settings_page.dart';
+import '../../features/todo_demo/presentation/todo_demo_page.dart';
 
 class AppRoutePaths {
   const AppRoutePaths._();
 
   static const home = '/';
-  static const settings = '/settings';
+  static const todoDemo = '/todo-demo';
 }
 
 class AppRouteNames {
   const AppRouteNames._();
-
   static const home = 'home';
-  static const settings = 'settings';
+  static const todoDemo = 'todoDemo';
 }
 
 final appRouter = GoRouter(
@@ -29,10 +28,11 @@ final appRouter = GoRouter(
       name: AppRouteNames.home,
       builder: (context, state) => const HomePage(),
     ),
+
     GoRoute(
-      path: AppRoutePaths.settings,
-      name: AppRouteNames.settings,
-      builder: (context, state) => const SettingsPage(),
+      path: AppRoutePaths.todoDemo,
+      name: AppRouteNames.todoDemo,
+      builder: (context, state) => const TodoDemoPage(),
     ),
   ],
 );

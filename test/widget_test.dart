@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_template/app/app.dart';
 import 'package:flutter_template/core/config/app_config.dart';
 import 'package:flutter_template/core/providers/app_config_provider.dart';
+import 'package:flutter_template/features/todo_demo/domain/todo.dart';
+import 'package:flutter_template/features/todo_demo/providers/todo_demo_providers.dart';
 
 void main() {
   testWidgets('renders template home page', (WidgetTester tester) async {
@@ -19,6 +21,16 @@ void main() {
       ProviderScope(
         overrides: [
           appConfigProvider.overrideWithValue(config),
+          demoTodoProvider.overrideWithValue(
+            const AsyncValue.data(
+              Todo(
+                id: 1,
+                userId: 1,
+                title: 'Test todo',
+                completed: false,
+              ),
+            ),
+          ),
         ],
         child: const TemplateApp(),
       ),
@@ -29,15 +41,14 @@ void main() {
     expect(find.text('Environment: '), findsOneWidget);
     expect(find.text('dev'), findsOneWidget);
     expect(find.text('https://api.test'), findsOneWidget);
-    expect(find.text('Open settings'), findsOneWidget);
+    expect(find.text('Open API demo'), findsOneWidget);
 
-    await tester.tap(find.text('Open settings'));
+    // The home page includes a small go_router example route.
+    await tester.tap(find.text('Open API demo'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Settings'), findsNWidgets(2));
-    expect(
-      find.text('This page demonstrates named-route navigation with go_router.'),
-      findsOneWidget,
-    );
+    // Successful navigation proves TemplateApp is using MaterialApp.router and
+    // the API demo route is registered.
+    expect(find.text('Todo Demo'), findsOneWidget);
   });
 }

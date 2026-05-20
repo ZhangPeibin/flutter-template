@@ -41,7 +41,14 @@ class HomePage extends ConsumerWidget {
                 _InfoTile(label: 'Environment', value: config.environment.name),
                 _InfoTile(label: 'API Base URL', value: config.apiBaseUrl),
                 const SizedBox(height: 24),
-                const _SettingsNavigationButton(),
+                const Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    _TodoDemoNavigationButton(),
+                  ],
+                ),
               ],
             ),
           ),
@@ -51,14 +58,15 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-class _SettingsNavigationButton extends StatelessWidget {
-  const _SettingsNavigationButton();
+
+class _TodoDemoNavigationButton extends StatelessWidget {
+  const _TodoDemoNavigationButton();
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton(
-      onPressed: () => context.pushNamed(AppRouteNames.settings),
-      child: const Text('Open settings'),
+    return FilledButton.tonal(
+      onPressed: () => context.pushNamed(AppRouteNames.todoDemo),
+      child: const Text('Open API demo'),
     );
   }
 }
