@@ -5,7 +5,7 @@
 ## 目标
 
 - 保持基础工程可直接运行。
-- 预留多环境配置入口。
+- 提供多环境配置入口。
 - 提供清晰的目录结构，方便后续扩展路由、网络、状态管理和设计系统。
 - 作为多个业务项目的起点，而不是绑定单一业务。
 
@@ -36,8 +36,10 @@ lib/
       logger_provider.dart
       secure_storage_provider.dart
     storage/
+      flutter_secure_storage_adapter.dart
       key_value_storage.dart
       secure_storage.dart
+      shared_preferences_key_value_storage.dart
   features/
     home/
       presentation/
@@ -57,10 +59,10 @@ lib/
 
 ## 从模板创建新项目
 
-1. 复制模版
+1. 复制模板
 
    ```bash
-   rsync -a --exclude .git flutter_template/ my_app/
+   rsync -a --exclude .git <template-dir>/ my_app/
    cd my_app
    ```
 
@@ -84,9 +86,13 @@ lib/
    脚本会同步修改：
 
    - `pubspec.yaml`
+   - `README.md`
+   - `.vscode/launch.json`
+   - `config/dev.json`、`config/staging.json`、`config/prod.example.json`
    - Android `namespace`、`applicationId`、Launcher 名称和 `MainActivity.kt` package 路径
    - iOS `CFBundleDisplayName`、`CFBundleName`、`PRODUCT_BUNDLE_IDENTIFIER`
    - `lib/`、`test/`、`integration_test/` 下 Dart 文件里的模板包名和默认 App 名称
+   - `.idea/`、`android/.idea/` 和模板生成的 `.iml` 文件
 
    如果需要配置签名团队，打开 `ios/Runner.xcworkspace` → `Runner` target → `Signing & Capabilities` 修改 Team。
 
@@ -110,15 +116,22 @@ lib/
    dart run tool/init_git.dart
    ```
 
+   默认会把初始分支改成 `main`。如果项目里已经存在 `.git`，脚本会停止并提示先删除复制过来的 `.git` 目录。
+
    如果想直接创建首个提交：
 
    ```bash
    dart run tool/init_git.dart --commit --message "Initial commit"
    ```
 
+   也可以指定初始分支：
+
+   ```bash
+   dart run tool/init_git.dart --branch main
+   dart run tool/init_git.dart --no-branch
+   ```
+
 6. 重新打开 IDE
-
-
 
 ## 运行
 
@@ -215,7 +228,7 @@ flutter test
 
 ## 状态管理
 
-模板已接入 `flutter_riverpod`。`lib/main.dart` 在启动时创建 `AppConfig`，并通过 `ProviderScope` 覆盖 `lib/core/providers/app_config_provider.dart` 中的 `appConfigProvider`。页面可以使用 `ref.watch(appConfigProvider)` 读取运行时配置。
+模板已接入 `flutter_riverpod`。`lib/main.dart` 在启动时创建 `AppConfig`、初始化 `SharedPreferences`，并通过 `ProviderScope` 覆盖 `appConfigProvider` 与 `sharedPreferencesProvider`。页面可以使用 `ref.watch(appConfigProvider)` 读取运行时配置。
 
 ## 路由
 
@@ -266,23 +279,41 @@ Demo feature 结构：
 - `lib/features/todo_demo/providers/todo_demo_providers.dart`：组装 API、repository 和 `FutureProvider`。
 - `lib/features/todo_demo/presentation/todo_demo_page.dart`：展示 loading、data、error 状态。
 
-Repository 示例：
+API layer + repository 示例：
 
 ```dart
-class UserRepository {
-  const UserRepository(this._dio);
+class UserApi {
+  const UserApi(this._dio);
 
   final Dio _dio;
 
-  Future<User> fetchUser(String id) async {
-    final response = await _dio.get<Map<String, dynamic>>('/users/$id');
-    return User.fromJson(response.data!);
+  Future<Map<String, dynamic>> fetchUser(String id) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>('/users/$id');
+      return response.data!;
+    } on DioException catch (error) {
+      throw ApiException.fromDioException(error);
+    }
   }
 }
 
+class UserRepository {
+  const UserRepository(this._api);
+
+  final UserApi _api;
+
+  Future<User> fetchUser(String id) async {
+    final json = await _api.fetchUser(id);
+    return User.fromJson(json);
+  }
+}
+
+final userApiProvider = Provider<UserApi>((ref) {
+  return UserApi(ref.watch(dioProvider));
+});
+
 final userRepositoryProvider = Provider<UserRepository>((ref) {
-  final dio = ref.watch(dioProvider);
-  return UserRepository(dio);
+  return UserRepository(ref.watch(userApiProvider));
 });
 ```
 
@@ -291,12 +322,8 @@ final userRepositoryProvider = Provider<UserRepository>((ref) {
 ```dart
 try {
   final user = await ref.read(userRepositoryProvider).fetchUser('123');
-} on DioException catch (error) {
-  final apiException = error.error;
-
-  if (apiException is ApiException) {
-    // 根据 apiException.type / statusCode 做业务处理。
-  }
+} on ApiException catch (error) {
+  // 根据 error.type / statusCode 做业务处理。
 }
 ```
 
@@ -325,7 +352,7 @@ try {
 ```dart
 final logger = ref.read(loggerProvider);
 
-logger.info('Settings page opened');
+logger.info('Todo demo page opened');
 logger.error(
   'Failed to load user profile',
   error: error,
@@ -450,7 +477,6 @@ testWidgets('reads locale from storage', (tester) async {
 
 ## 后续扩展方向
 
-- 封装 repository、service 和统一错误处理。
 - 接入 `sentry_flutter` 作为生产错误上报。
 - 增加 Android flavor 与 iOS scheme。
 - 增加 Mason 模板，用于生成 feature、page、service 和 model。
