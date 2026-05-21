@@ -18,6 +18,9 @@ lib/
     router/
       app_router.dart
     theme/
+      app_colors.dart
+      app_spacing.dart
+      app_text_styles.dart
       app_theme.dart
   core/
     config/
@@ -40,6 +43,13 @@ lib/
       key_value_storage.dart
       secure_storage.dart
       shared_preferences_key_value_storage.dart
+    widgets/
+      app_button.dart
+      app_empty_view.dart
+      app_error_view.dart
+      app_loading_view.dart
+      app_scaffold.dart
+      app_text_field.dart
   features/
     home/
       presentation/
@@ -229,6 +239,63 @@ flutter test
 ## 状态管理
 
 模板已接入 `flutter_riverpod`。`lib/main.dart` 在启动时创建 `AppConfig`、初始化 `SharedPreferences`，并通过 `ProviderScope` 覆盖 `appConfigProvider` 与 `sharedPreferencesProvider`。页面可以使用 `ref.watch(appConfigProvider)` 读取运行时配置。
+
+## 设计系统
+
+模板把设计 token 放在 `lib/app/theme/`，把跨 feature 复用的基础组件放在 `lib/core/widgets/`。业务页面优先使用这些 token 和组件，避免在 feature 内重复定义颜色、间距和通用 UI 状态。
+
+### Theme tokens
+
+| 文件 | 作用 |
+| --- | --- |
+| `lib/app/theme/app_colors.dart` | 品牌色与语义颜色，例如 `AppColors.brand`、`success`、`warning`、`error` |
+| `lib/app/theme/app_text_styles.dart` | 字体层级，例如 `display`、`headline`、`title`、`body`、`label` |
+| `lib/app/theme/app_spacing.dart` | 数字化间距与圆角 token，例如 `s8`、`s16`、`s24`、`r8`、`r12`、`r16` |
+| `lib/app/theme/app_theme.dart` | 组装 Material `ThemeData`，统一配置颜色、文字、按钮和输入框样式 |
+
+使用示例：
+
+```dart
+const SizedBox(height: AppSpacing.s16);
+
+Container(
+  decoration: BoxDecoration(
+    color: AppColors.brand,
+    borderRadius: BorderRadius.circular(AppSpacing.r12),
+  ),
+);
+```
+
+如需自定义字体，在 `AppTextStyles` 中定义 `fontFamily`，并在 `AppTheme` 的 `ThemeData.fontFamily` 中启用。
+
+### Common widgets
+
+| 组件 | 作用 |
+| --- | --- |
+| `AppScaffold` | 统一页面标题、内容宽度、padding 和居中布局 |
+| `AppButton` | 品牌按钮封装，支持 `primary`、`secondary`、`text` 三种 variant |
+| `AppTextField` | 统一输入框封装，复用全局 `InputDecorationTheme` |
+| `AppLoadingView` | 通用 loading 状态 |
+| `AppEmptyView` | 通用空状态 |
+| `AppErrorView` | 通用错误状态，支持可选 `onRetry` |
+
+页面示例：
+
+```dart
+return AppScaffold(
+  title: 'Profile',
+  body: Column(
+    children: [
+      const AppTextField(labelText: 'Name'),
+      const SizedBox(height: AppSpacing.s16),
+      AppButton(
+        label: 'Save',
+        onPressed: saveProfile,
+      ),
+    ],
+  ),
+);
+```
 
 ## 路由
 

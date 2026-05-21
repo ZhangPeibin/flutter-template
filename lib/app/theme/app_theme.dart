@@ -17,12 +17,13 @@ class AppTheme {
 
   static ThemeData _buildTheme(Brightness brightness) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: AppColors.success,
+      seedColor: AppColors.brand,
       brightness: brightness,
     );
 
     return ThemeData(
-      fontFamily: AppTextStyles.fontFamily,
+      // You can add custom font here.
+      // fontFamily: AppTextStyles.fontFamily,
       colorScheme: colorScheme,
       useMaterial3: true,
       textTheme: const TextTheme(

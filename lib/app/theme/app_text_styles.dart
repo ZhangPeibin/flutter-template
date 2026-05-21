@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppTextStyles {
   const AppTextStyles._();
 
-  static const fontFamily = 'Roboto';
+  // static const fontFamily = 'Roboto';
 
   static const display = TextStyle(
     fontSize: 32,
