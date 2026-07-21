@@ -4,10 +4,28 @@
 
 ## 目标
 
-- 保持基础工程可直接运行。
-- 提供多环境配置入口。
-- 提供清晰的目录结构，方便后续扩展路由、网络、状态管理和设计系统。
-- 作为多个业务项目的起点，而不是绑定单一业务。
+- 保持基础工程可直接运行（多环境 + demo）。
+- 提供清晰的目录结构，方便扩展路由、网络、状态管理和设计系统。
+- 作为多个业务项目的起点，不绑定单一业务 / 品牌。
+- 内置跨 App 通用平台能力：Toast、i18n、Auth 骨架、DeviceInfo、更新检查、WebView 壳等。
+
+## 开箱能力
+
+| 能力 | 说明 |
+| --- | --- |
+| 多环境配置 | `config/*.json` + `--dart-define-from-file` |
+| 状态管理 | `flutter_riverpod` |
+| 路由 | `go_router`（未登录 redirect → `/sign-in`） |
+| 网络 | `dio` + logging / auth / refresh / deviceInfo / 全局错误 toast |
+| 存储 | `KeyValueStorage` + `SecureStorage` |
+| i18n | slang（en / zh）+ 语言持久化 |
+| Toast | `AppToast` facade（底层 toastification） |
+| Auth 骨架 | Dev Sign In 假 token；无产品登录 API |
+| iOS Install Guard | 重装清 Keychain，避免「删 App 仍登录」 |
+| DeviceInfo | 出站请求带 `deviceInfo` JSON header |
+| App Update | 可选 / 强制更新 dialog 样例 |
+| WebView | host allowlist（默认 `example.com`） |
+| Demo | `todo_demo`：loading / empty / error / success |
 
 ## 目录结构
 
@@ -15,56 +33,50 @@
 lib/
   app/
     app.dart
-    router/
-      app_router.dart
+    router/app_router.dart
     theme/
-      app_colors.dart
-      app_spacing.dart
-      app_text_styles.dart
-      app_theme.dart
   core/
-    config/
-      app_config.dart
+    config/app_config.dart
+    device/device_info_service.dart
+    errors/app_error_localizer.dart
+    feedback/app_toast.dart
+    i18n/app_locale_controller.dart
     logging/
-      app_logger.dart
-      console_app_logger.dart
     network/
+      api_envelope.dart
       api_exception.dart
+      auth_interceptor.dart
+      device_info_interceptor.dart
       dio_logging_interceptor.dart
       error_interceptor.dart
+      refresh_token_interceptor.dart
     providers/
-      app_config_provider.dart
-      dio_provider.dart
-      key_value_storage_provider.dart
-      logger_provider.dart
-      secure_storage_provider.dart
+    startup/
+      app_install_guard.dart
+      startup_logger.dart
     storage/
-      flutter_secure_storage_adapter.dart
-      key_value_storage.dart
-      secure_storage.dart
-      shared_preferences_key_value_storage.dart
     widgets/
-      app_button.dart
-      app_empty_view.dart
-      app_error_view.dart
-      app_loading_view.dart
-      app_scaffold.dart
-      app_text_field.dart
   features/
+    auth/           # Dev Sign In 骨架
+    app_update/     # 版本检查 + dialog
     home/
-      presentation/
-        home_page.dart
     not_found/
-      presentation/
-        not_found_page.dart
-    todo_demo/
-      data/
-        api/
-        repositories/
-      domain/
-      presentation/
-      providers/
+    settings/       # 语言设置
+    todo_demo/      # API demo
+    webview/        # allowlist WebView
+  i18n/
+    en.i18n.json
+    zh.i18n.json
   main.dart
+docs/
+  device-info-header-prd.md
+config/
+  dev.json
+  staging.json
+  prod.example.json
+tool/
+  setup_project.dart
+  init_git.dart
 ```
 
 ## 从模板创建新项目
@@ -88,146 +100,243 @@ lib/
 
    参数说明：
 
-   - `project-name`：Dart package 名，写入 `pubspec.yaml`，例如 `my_app`。
-   - `display-name`：App 在 Android Launcher 和 iOS Home Screen 显示的名字。
-   - `android-package`：Android `namespace`、`applicationId` 和 Kotlin package，例如 `com.xxx.my_app`。
-   - `ios-bundle-id`：iOS `PRODUCT_BUNDLE_IDENTIFIER`。可省略，默认从 `android-package` 推导，并把 `_` 转成 `-`。
+   - `project-name`：Dart package 名，写入 `pubspec.yaml`。
+   - `display-name`：Android Launcher / iOS Home Screen 显示名。
+   - `android-package`：Android `namespace`、`applicationId` 和 Kotlin package。
+   - `ios-bundle-id`：可选；默认从 `android-package` 推导，并把 `_` 转成 `-`。
 
-   脚本会同步修改：
+   脚本会同步修改 `pubspec.yaml`、`README.md`、`.vscode/launch.json`、`config/*.json`、Android / iOS 包名与显示名，以及 `lib/`、`test/`、`integration_test/` 下的模板包名。
 
-   - `pubspec.yaml`
-   - `README.md`
-   - `.vscode/launch.json`
-   - `config/dev.json`、`config/staging.json`、`config/prod.example.json`
-   - Android `namespace`、`applicationId`、Launcher 名称和 `MainActivity.kt` package 路径
-   - iOS `CFBundleDisplayName`、`CFBundleName`、`PRODUCT_BUNDLE_IDENTIFIER`
-   - `lib/`、`test/`、`integration_test/` 下 Dart 文件里的模板包名和默认 App 名称
-   - `.idea/`、`android/.idea/` 和模板生成的 `.iml` 文件
+   签名团队：打开 `ios/Runner.xcworkspace` → `Runner` → `Signing & Capabilities`。
 
-   如果需要配置签名团队，打开 `ios/Runner.xcworkspace` → `Runner` target → `Signing & Capabilities` 修改 Team。
-
-   注意：脚本需要在 Flutter 项目根目录执行，并且新名字不能包含旧模板名或旧包名。
-
-3. 清理 IDE 残留文件
+3. 清理并拉依赖
 
    ```bash
    flutter clean
-   ```
-
-4. 重新生成依赖
-
-   ```bash
    flutter pub get
+   dart run slang   # 若改过 i18n JSON
    ```
 
-5. 初始化 Git
+4. 初始化 Git
 
    ```bash
    dart run tool/init_git.dart
+   # 或：dart run tool/init_git.dart --commit --message "Initial commit"
    ```
 
-   默认会把初始分支改成 `main`。如果项目里已经存在 `.git`，脚本会停止并提示先删除复制过来的 `.git` 目录。
+5. 重新打开 IDE 项目根目录（不要只打开 `android/`）。
 
-   如果想直接创建首个提交：
-
-   ```bash
-   dart run tool/init_git.dart --commit --message "Initial commit"
-   ```
-
-   也可以指定初始分支：
-
-   ```bash
-   dart run tool/init_git.dart --branch main
-   dart run tool/init_git.dart --no-branch
-   ```
-
-6. 重新打开 IDE
+业务 App 常见下一步：换主题 / API、删 `todo_demo`、在 `features/` 加自己的业务。
 
 ## 运行
 
 ```bash
 flutter pub get
-flutter run
-```
-
-也可以使用 `Makefile` 里的快捷命令：
-
-```bash
-make get
 make run-dev
+# 或：
+flutter run --dart-define-from-file=config/dev.json
 ```
-
-## 多环境配置
-
-模板通过 `--dart-define-from-file` 注入环境配置，并提供了 `Makefile` 与 VS Code 启动配置。
-
-环境配置文件：
-
-- `config/dev.json`
-- `config/staging.json`
-- `config/prod.example.json`（模板，已提交）
-- `config/prod.json`（本地实际生效的生产配置，**已 gitignore**，可包含密钥）
-
-首次拉取项目后，执行下面任意一条命令生成本地 `config/prod.json`：
-
-```bash
-make bootstrap
-# 或者手动：
-cp config/prod.example.json config/prod.json
-```
-
-`make run-prod` 已自动调用 `bootstrap`，所以如果你只用 `make run-prod` 也无需手动复制。
-
-`APP_NAME` 会影响 Flutter 页面里读取 `AppConfig.appName` 的位置，例如 `MaterialApp.title` 和首页标题。Android Launcher 与 iOS Home Screen 显示名来自平台配置，需要通过 `tool/setup_project.dart` 或手动修改 Android `android:label`、iOS `CFBundleDisplayName`。
-
-### Makefile 命令
 
 | 命令 | 作用 |
 | --- | --- |
-| `make get` | 执行 `flutter pub get` |
-| `make bootstrap` | 若不存在，则从 `config/prod.example.json` 生成 `config/prod.json` |
-| `make run-dev` | 以 `APP_ENV=dev` 启动 |
-| `make run-staging` | 以 `APP_ENV=staging` 启动 |
-| `make run-prod` | 自动执行 `bootstrap`，以 `APP_ENV=prod` 和 release 模式启动 |
-| `make analyze` | 执行 `flutter analyze` |
-| `make test` | 执行 `flutter test` |
-| `make clean` | 执行 `flutter clean` |
+| `make get` | `flutter pub get` |
+| `make bootstrap` | 从 `prod.example.json` 生成本地 `prod.json`（若不存在） |
+| `make run-dev` / `run-staging` / `run-prod` | 按环境启动（prod 自动 bootstrap + release） |
+| `make analyze` / `make test` / `make clean` | 质量检查与清理 |
 
-常用运行命令：
+VS Code 启动配置：`Flutter Dev` / `Flutter Staging` / `Flutter Prod`。
 
-```bash
-make run-dev
-make run-staging
-make run-prod
+## 多环境配置
+
+通过 `--dart-define-from-file` 注入：
+
+- `config/dev.json`
+- `config/staging.json`
+- `config/prod.example.json`（已提交）
+- `config/prod.json`（本地，**已 gitignore**）
+
+### 常用 define
+
+| Key | 说明 | 示例 |
+| --- | --- | --- |
+| `APP_NAME` | Flutter 内显示名 | `Flutter Template` |
+| `APP_ENV` | `dev` / `staging` / `prod` | `dev` |
+| `API_BASE_URL` | Dio `baseUrl` | `https://jsonplaceholder.typicode.com` |
+| `USE_MOCK_API` | demo / 部分能力走本地 mock | `true` |
+| `REFRESH_TOKEN_PATH` | refresh 相对路径 | `/api/v1/auth/refresh` |
+| `APP_VERSION_CHECK_PATH` | 版本检查相对路径 | `/api/v1/app/version/check` |
+| `WEBVIEW_ALLOWED_HOSTS` | 逗号分隔 host allowlist | `example.com,www.example.com` |
+
+`APP_NAME` 影响 `MaterialApp.title` 等；Launcher 显示名仍由平台配置 / `setup_project` 决定。
+
+## 依赖一览
+
+| 包 | 用途 |
+| --- | --- |
+| `flutter_riverpod` | 状态管理 |
+| `go_router` | 路由 |
+| `dio` | 网络 |
+| `logger` | 日志（经 `AppLogger`） |
+| `shared_preferences` / `flutter_secure_storage` | KV / 安全存储 |
+| `toastification` | Toast（经 `AppToast`） |
+| `slang` / `slang_flutter` | i18n |
+| `pinput` | OTP 输入 |
+| `device_info_plus` / `package_info_plus` | DeviceInfo header |
+| `url_launcher` | 打开应用商店等外链 |
+| `webview_flutter` | 壳 WebView |
+
+## 状态管理
+
+`lib/main.dart` 启动时创建 `AppConfig`、初始化 `SharedPreferences`（及 iOS Install Guard），并通过 `ProviderScope` 覆盖 `appConfigProvider` / `sharedPreferencesProvider`。页面用 `ref.watch(appConfigProvider)` 读配置。
+
+## 设计系统
+
+Token 在 `lib/app/theme/`，通用组件在 `lib/core/widgets/`。
+
+### Theme tokens
+
+| 文件 | 作用 |
+| --- | --- |
+| `app_colors.dart` | 品牌色与语义色（中性 placeholder，非业务品牌） |
+| `app_text_styles.dart` | 字体层级 |
+| `app_spacing.dart` | 间距 / 圆角 / `AppRadius` / `AppSize` |
+| `app_theme.dart` | 组装 `ThemeData` |
+
+### Common widgets
+
+| 组件 | 作用 |
+| --- | --- |
+| `AppScaffold` | 页面标题、宽度、padding |
+| `AppButton` | `primary` / `secondary` / `text` |
+| `AppTextField` | 输入框 |
+| `AppLoadingView` / `AppEmptyView` / `AppErrorView` | 通用状态 |
+| `AppSkeleton` | shimmer 占位 |
+| `AppListEmptyView` | 列表空状态（i18n） |
+| `AppOtpField` / `SendCodeButton` | OTP + 发码倒计时 |
+| `AppFilterBar` | 筛选 chip + sheet |
+| `AppTextTabBar` / `AppTabPageTopBar` | Tab 相关 |
+| `AppOptionTile` / `AppTwoLineListItem` | 列表行 |
+| `AppTextDivider` / `AppBarCloseButton` / `AppRichText` / `AppIconBadge` | 其它通用 UI |
+| `SplashWidget` | 启动页骨架（默认 Flutter Template） |
+
+## 路由与 Auth
+
+路由在 `lib/app/router/app_router.dart`（`appRouterProvider`）。未登录 redirect 到 `/sign-in`；`Dev Sign In` 写入假 token 后进首页。
+
+| 路径 | 说明 |
+| --- | --- |
+| `/` | Home |
+| `/sign-in` | 占位登录 |
+| `/todo-demo` | API demo |
+| `/settings/language` | 语言 |
+| `/webview?url=` | WebView |
+
+| 文件 | 作用 |
+| --- | --- |
+| `features/auth/presentation/sign_in_page.dart` | Dev Sign In |
+| `features/auth/providers/auth_notifier.dart` | 登录态 |
+| `core/network/auth_interceptor.dart` | `Authorization` header |
+| `core/network/refresh_token_interceptor.dart` | 401 刷新重试（路径/解析可注入） |
+| `core/storage/storage_keys.dart` | access / refresh / install id |
+
+`USE_MOCK_API=true` 时 refresh 走本地 Dev client，不打真实 endpoint。
+
+新增路由示例：
+
+```dart
+GoRoute(
+  path: AppRoutePaths.profile,
+  name: AppRouteNames.profile,
+  builder: (context, state) => const ProfilePage(),
+);
+
+context.pushNamed(AppRouteNames.profile);
 ```
 
-如果 `make run-dev` 无法接收热重载输入，可以直接运行 Flutter 命令：
+## 网络
+
+`dioProvider` 使用 `AppConfig.apiBaseUrl`，并挂上：
+
+1. `DeviceInfoInterceptor`
+2. `AuthInterceptor`
+3. `RefreshTokenInterceptor`
+4. `ErrorInterceptor`（`ApiException` + 全局 toast 防抖）
+5. `DioLoggingInterceptor`
+
+可选 envelope：`unwrapApiData`（`lib/core/network/api_envelope.dart`）约定 `{ code, message, data }` 且 `code == 0` 成功；业务 envelope 不同时替换该 helper 即可。
+
+### 全局错误 Toast
+
+| 文件 | 作用 |
+| --- | --- |
+| `core/feedback/app_toast.dart` | 统一 facade（业务不要直接 import toastification） |
+| `core/errors/app_error_localizer.dart` | transport 文案（走 slang `error.*`） |
+| `core/network/error_interceptor.dart` | fault-state lock + 最小间隔 |
+
+- 首次 network / timeout / server 失败 toast 一次并锁定同类故障。
+- 任意成功请求后解锁，下一次故障可再 toast。
+
+### `todo_demo` 与 `USE_MOCK_API`
+
+| `USE_MOCK_API` | 行为 |
+| --- | --- |
+| `true`（dev 默认） | success / empty / error 走 `MockTodoApi` |
+| `false` | success 走远程 `API_BASE_URL`；empty / error 仍用本地 mock |
+
+手动验收：
 
 ```bash
 flutter run --dart-define-from-file=config/dev.json
-flutter run --dart-define-from-file=config/staging.json
 ```
 
-如需修改 App 名或接口地址，直接编辑对应环境的 JSON 文件。
+1. Dev Sign In → 首页 → Todo Demo：Success / Empty / Error。
+2. Error 应触发全局网络 toast；Retry 可重试。
+3. `USE_MOCK_API=false` 且 baseUrl 为 JSONPlaceholder 时，Success 拉 `/todos/1`。
 
-VS Code 运行：
+## 国际化（i18n）
 
-- `Flutter Dev`
-- `Flutter Staging`
-- `Flutter Prod`
-
-手动运行：
+[slang](https://pub.dev/packages/slang)：源文件 `lib/i18n/*.i18n.json`，生成 `strings*.g.dart`（不要手改）。语言持久化 key：`app.locale`。
 
 ```bash
-flutter run \
-  --dart-define-from-file=config/dev.json
+dart run slang
 ```
 
-当前支持的 `APP_ENV`：
+```dart
+Text(context.t.common.retry);
+```
 
-- `dev`
-- `staging`
-- `prod`
+首页「Language」可切换 en/zh；杀进程重开保持选择。
+
+## 启动：iOS Install Guard
+
+`AppInstallGuard` 仅在 iOS 启动早期运行：SharedPreferences 无安装标记时清空 Secure Storage（Keychain 可能残留），再写入标记。Android 跳过，避免首帧前 Keystore I/O。
+
+手动验收（iOS）：Dev Sign In → 删 App 重装 → 应回到登录页。
+
+## DeviceInfo
+
+出站请求（含 refresh）带 `deviceInfo` JSON header。字段约定见 `docs/device-info-header-prd.md`。`install_id` 首次生成后写入 Secure Storage，同一次安装内稳定；iOS 重装经 Install Guard 清空后会重新生成。
+
+## App Update
+
+首页「检查更新（可选 / 强制）」：`USE_MOCK_API=true` 时走 mock dialog；否则请求 `APP_VERSION_CHECK_PATH`。强制更新不可 dismiss；可选可点「稍后」。
+
+## WebView
+
+`/webview?url=` 使用 `webview_flutter`。Allowlist 来自 `WEBVIEW_ALLOWED_HOSTS` / `AppConfig.webViewAllowedHosts`（默认 `example.com`）。非白名单拒绝并提示。不要使用 `flutter_inappwebview`（本模板未引入）。
+
+## 日志
+
+经 `AppLogger` / `loggerProvider` 使用，业务不要直接 `Logger()`。默认 `ConsoleAppLogger`；可换 Sentry 等适配器而不改调用方。Dio 日志走同一 provider。
+
+## 本地存储
+
+| 抽象 | 默认实现 | 场景 |
+| --- | --- | --- |
+| `KeyValueStorage` | SharedPreferences | 语言、偏好等 |
+| `SecureStorage` | flutter_secure_storage | token、凭证 |
+
+Token 等敏感数据请用 `StorageKeys` + `SecureStorage`，不要写死 key 散落各处。
 
 ## 质量检查
 
@@ -236,314 +345,9 @@ flutter analyze
 flutter test
 ```
 
-## 状态管理
-
-模板已接入 `flutter_riverpod`。`lib/main.dart` 在启动时创建 `AppConfig`、初始化 `SharedPreferences`，并通过 `ProviderScope` 覆盖 `appConfigProvider` 与 `sharedPreferencesProvider`。页面可以使用 `ref.watch(appConfigProvider)` 读取运行时配置。
-
-## 设计系统
-
-模板把设计 token 放在 `lib/app/theme/`，把跨 feature 复用的基础组件放在 `lib/core/widgets/`。业务页面优先使用这些 token 和组件，避免在 feature 内重复定义颜色、间距和通用 UI 状态。
-
-### Theme tokens
-
-| 文件 | 作用 |
-| --- | --- |
-| `lib/app/theme/app_colors.dart` | 品牌色与语义颜色，例如 `AppColors.brand`、`success`、`warning`、`error` |
-| `lib/app/theme/app_text_styles.dart` | 字体层级，例如 `display`、`headline`、`title`、`body`、`label` |
-| `lib/app/theme/app_spacing.dart` | 数字化间距与圆角 token，例如 `s8`、`s16`、`s24`、`r8`、`r12`、`r16` |
-| `lib/app/theme/app_theme.dart` | 组装 Material `ThemeData`，统一配置颜色、文字、按钮和输入框样式 |
-
-使用示例：
-
-```dart
-const SizedBox(height: AppSpacing.s16);
-
-Container(
-  decoration: BoxDecoration(
-    color: AppColors.brand,
-    borderRadius: BorderRadius.circular(AppSpacing.r12),
-  ),
-);
-```
-
-如需自定义字体，在 `AppTextStyles` 中定义 `fontFamily`，并在 `AppTheme` 的 `ThemeData.fontFamily` 中启用。
-
-### Common widgets
-
-| 组件 | 作用 |
-| --- | --- |
-| `AppScaffold` | 统一页面标题、内容宽度、padding 和居中布局 |
-| `AppButton` | 品牌按钮封装，支持 `primary`、`secondary`、`text` 三种 variant |
-| `AppTextField` | 统一输入框封装，复用全局 `InputDecorationTheme` |
-| `AppLoadingView` | 通用 loading 状态 |
-| `AppEmptyView` | 通用空状态 |
-| `AppErrorView` | 通用错误状态，支持可选 `onRetry` |
-
-页面示例：
-
-```dart
-return AppScaffold(
-  title: 'Profile',
-  body: Column(
-    children: [
-      const AppTextField(labelText: 'Name'),
-      const SizedBox(height: AppSpacing.s16),
-      AppButton(
-        label: 'Save',
-        onPressed: saveProfile,
-      ),
-    ],
-  ),
-);
-```
-
-## 路由
-
-模板已接入 `go_router`。路由定义集中在 `lib/app/router/app_router.dart`，`TemplateApp` 使用 `MaterialApp.router` 作为统一入口。`HomePage` 通过 `context.pushNamed(...)` 演示命名路由跳转，未匹配到的路径会显示 `NotFoundPage`。
-
-新增页面路由示例：
-
-```dart
-class AppRoutePaths {
-  static const profile = '/profile';
-}
-
-class AppRouteNames {
-  static const profile = 'profile';
-}
-
-GoRoute(
-  path: AppRoutePaths.profile,
-  name: AppRouteNames.profile,
-  builder: (context, state) => const ProfilePage(),
-)
-```
-
-页面跳转示例：
-
-```dart
-context.pushNamed(AppRouteNames.profile);
-```
-
-如果需要传 path parameter：
-
-```dart
-context.pushNamed(
-  AppRouteNames.profile,
-  pathParameters: {'id': userId},
-);
-```
-
-## 网络
-
-模板已接入 `dio`。`lib/core/providers/dio_provider.dart` 中的 `dioProvider` 会读取 `appConfigProvider`，并使用 `AppConfig.apiBaseUrl` 作为 `BaseOptions.baseUrl`。它也会读取 `loggerProvider`，通过 `DioLoggingInterceptor` 统一记录 request、response 和 error。`todo_demo` feature 使用 JSONPlaceholder 的 `/todos/1` 演示 API layer、repository layer、provider 和页面状态。
-
-Demo feature 结构：
-
-- `lib/core/network/dio_logging_interceptor.dart`：通过 `AppLogger` 记录 Dio 请求、响应和错误。
-- `lib/features/todo_demo/data/api/todo_api.dart`：负责 Dio 请求和 `DioException` 到 `ApiException` 的转换。
-- `lib/features/todo_demo/data/repositories/todo_repository.dart`：调用 API layer，并把 JSON 转成 domain model。
-- `lib/features/todo_demo/providers/todo_demo_providers.dart`：组装 API、repository 和 `FutureProvider`。
-- `lib/features/todo_demo/presentation/todo_demo_page.dart`：展示 loading、data、error 状态。
-
-API layer + repository 示例：
-
-```dart
-class UserApi {
-  const UserApi(this._dio);
-
-  final Dio _dio;
-
-  Future<Map<String, dynamic>> fetchUser(String id) async {
-    try {
-      final response = await _dio.get<Map<String, dynamic>>('/users/$id');
-      return response.data!;
-    } on DioException catch (error) {
-      throw ApiException.fromDioException(error);
-    }
-  }
-}
-
-class UserRepository {
-  const UserRepository(this._api);
-
-  final UserApi _api;
-
-  Future<User> fetchUser(String id) async {
-    final json = await _api.fetchUser(id);
-    return User.fromJson(json);
-  }
-}
-
-final userApiProvider = Provider<UserApi>((ref) {
-  return UserApi(ref.watch(dioProvider));
-});
-
-final userRepositoryProvider = Provider<UserRepository>((ref) {
-  return UserRepository(ref.watch(userApiProvider));
-});
-```
-
-错误处理示例：
-
-```dart
-try {
-  final user = await ref.read(userRepositoryProvider).fetchUser('123');
-} on ApiException catch (error) {
-  // 根据 error.type / statusCode 做业务处理。
-}
-```
-
-## 日志
-
-模板已接入 `logger`，并通过 `lib/core/logging/app_logger.dart` 暴露 `AppLogger` 抽象。业务代码应通过 `lib/core/providers/logger_provider.dart` 中的 `loggerProvider` 获取日志能力，避免直接依赖具体日志 SDK，方便后续替换为 `sentry_flutter` 或其他实现。
-
-当前 `logger` 实现：
-
-- `lib/core/logging/app_logger.dart`：定义项目自己的日志接口。
-- `lib/core/logging/console_app_logger.dart`：把 `AppLogger` 转接到 `logger` package，用于本地控制台日志。
-- `lib/core/providers/logger_provider.dart`：创建并暴露当前日志实现。
-- `lib/core/network/dio_logging_interceptor.dart`：让 Dio 使用 `loggerProvider` 记录网络日志。
-
-如果要把日志 SDK 切换为 `logger` package，做法是：
-
-1. 在 `pubspec.yaml` 添加 `logger`。
-2. 实现一个 `AppLogger` 的适配器，例如 `ConsoleAppLogger`。
-3. 在 `loggerProvider` 中返回新的适配器。
-4. 业务代码继续使用 `ref.read(loggerProvider)` 或 `ref.watch(loggerProvider)`，不要直接创建 `Logger()`。
-
-如果以后要从 `logger` 切换到其他 SDK，只需要新增一个实现 `AppLogger` 的适配器，并替换 `loggerProvider` 中返回的对象。Dio 会继续通过 `loggerProvider` 记录网络日志，不需要改业务代码。
-
-业务代码示例：
-
-```dart
-final logger = ref.read(loggerProvider);
-
-logger.info('Todo demo page opened');
-logger.error(
-  'Failed to load user profile',
-  error: error,
-  stackTrace: stackTrace,
-);
-```
-
-切换实现示例：
-
-```dart
-class MySdkAppLogger implements AppLogger {
-  const MySdkAppLogger(this._sdk);
-
-  final MyLoggingSdk _sdk;
-
-  @override
-  void info(String message, {Object? error, StackTrace? stackTrace}) {
-    _sdk.logInfo(message);
-  }
-
-  // 继续实现 debug、warning、error。
-}
-
-final loggerProvider = Provider<AppLogger>((ref) {
-  return MySdkAppLogger(MyLoggingSdk());
-});
-```
-
-## 本地存储
-
-模板预置了两套存储抽象，业务代码应通过 Riverpod 注入它们，不直接依赖具体实现。
-
-| 抽象 | 文件 | 默认实现 | 适用场景 |
-| --- | --- | --- | --- |
-| `KeyValueStorage` | `lib/core/storage/key_value_storage.dart` | `SharedPreferencesKeyValueStorage`（`shared_preferences`） | 非敏感的偏好设置：主题、语言、引导页状态等 |
-| `SecureStorage` | `lib/core/storage/secure_storage.dart` | `FlutterSecureStorageAdapter`（`flutter_secure_storage`） | 敏感数据：access token、refresh token、凭证等 |
-
-### Provider
-
-- `lib/core/providers/key_value_storage_provider.dart`：暴露 `keyValueStorageProvider` 和 `sharedPreferencesProvider`。
-- `lib/core/providers/secure_storage_provider.dart`：暴露 `secureStorageProvider`。
-
-`lib/main.dart` 在启动时 `await SharedPreferences.getInstance()`，并通过 `ProviderScope.overrides` 注入到 `sharedPreferencesProvider`。测试可以用 `SharedPreferences.setMockInitialValues({...})` 覆盖。
-
-### 基础用法
-
-```dart
-final prefs = ref.read(keyValueStorageProvider);
-await prefs.setString('locale', 'zh_CN');
-
-final secure = ref.read(secureStorageProvider);
-await secure.write('access_token', token);
-final token = await secure.read('access_token');
-```
-
-### 页面中保存非敏感配置
-
-```dart
-class LocaleButton extends ConsumerWidget {
-  const LocaleButton({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return FilledButton(
-      onPressed: () async {
-        final storage = ref.read(keyValueStorageProvider);
-        await storage.setString('locale', 'zh_CN');
-      },
-      child: const Text('Use Chinese'),
-    );
-  }
-}
-```
-
-### Repository 中保存和读取 token
-
-```dart
-class AuthRepository {
-  const AuthRepository(this._secureStorage);
-
-  final SecureStorage _secureStorage;
-
-  Future<void> saveToken(String token) {
-    return _secureStorage.write('access_token', token);
-  }
-
-  Future<String?> readToken() {
-    return _secureStorage.read('access_token');
-  }
-
-  Future<void> signOut() {
-    return _secureStorage.delete('access_token');
-  }
-}
-
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(ref.watch(secureStorageProvider));
-});
-```
-
-### 测试中覆盖 `SharedPreferences`
-
-```dart
-testWidgets('reads locale from storage', (tester) async {
-  SharedPreferences.setMockInitialValues({'locale': 'zh_CN'});
-  final prefs = await SharedPreferences.getInstance();
-
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
-      child: const TemplateApp(),
-    ),
-  );
-});
-```
-
-### 替换底层实现
-
-切换底层实现时，只需新增一个实现 `KeyValueStorage` 或 `SecureStorage` 的类，并在对应的 provider 中返回它，业务代码无须改动。
-
-## 后续扩展方向
-
-- 接入 `sentry_flutter` 作为生产错误上报。
-- 增加 Android flavor 与 iOS scheme。
-- 增加 Mason 模板，用于生成 feature、page、service 和 model。
+## 后续可选
+
+- 接入 `sentry_flutter` 生产错误上报。
+- Android flavor / iOS scheme。
+- Mason 生成 feature / page / service。
+- 金融向 UI、加密工具等可作为独立 `lib/packs/*` opt-in（默认不启用）。
