@@ -16,10 +16,16 @@ void main() {
 
     final todo = await repository.fetchTodo(1);
 
-    expect(todo.id, 1);
-    expect(todo.userId, 1);
-    expect(todo.title, 'delectus aut autem');
-    expect(todo.completed, isFalse);
+    expect(todo?.id, 1);
+    expect(todo?.userId, 1);
+    expect(todo?.title, 'delectus aut autem');
+    expect(todo?.completed, isFalse);
+  });
+
+  test('returns null for empty mock payloads', () async {
+    final repository = TodoRepository(const _FakeTodoApi({}));
+
+    expect(await repository.fetchTodo(0), isNull);
   });
 }
 

@@ -4,23 +4,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_template/app/app.dart';
 import 'package:flutter_template/core/config/app_config.dart';
 import 'package:flutter_template/core/providers/app_config_provider.dart';
+import 'package:flutter_template/features/auth/providers/auth_notifier.dart';
 import 'package:flutter_template/features/todo_demo/domain/todo.dart';
 import 'package:flutter_template/features/todo_demo/providers/todo_demo_providers.dart';
+import 'package:flutter_template/i18n/strings.g.dart';
+
+import 'support/i18n_test_helpers.dart';
 
 void main() {
-  testWidgets('renders template home page', (WidgetTester tester) async {
-    // Keep the widget test independent from --dart-define files by injecting
-    // the runtime config directly.
+  testWidgets('renders template home page when signed in', (tester) async {
     const config = AppConfig(
       appName: 'Test App',
       environment: AppEnvironment.dev,
       apiBaseUrl: 'https://api.test',
     );
 
-    await tester.pumpWidget(
-      ProviderScope(
+    await pumpTemplateApp(
+      tester,
+      app: ProviderScope(
         overrides: [
           appConfigProvider.overrideWithValue(config),
+          authNotifierProvider.overrideWith(_SignedInAuthNotifier.new),
           demoTodoProvider.overrideWithValue(
             const AsyncValue.data(
               Todo(
@@ -35,20 +39,22 @@ void main() {
         child: const TemplateApp(),
       ),
     );
+    await tester.pumpAndSettle();
 
-    // The app name is shown in both the AppBar and the page headline.
     expect(find.text('Test App'), findsNWidgets(2));
     expect(find.text('Environment: '), findsOneWidget);
     expect(find.text('dev'), findsOneWidget);
     expect(find.text('https://api.test'), findsOneWidget);
-    expect(find.text('Open API demo'), findsOneWidget);
+    expect(find.text(t.app.openApiDemo), findsOneWidget);
 
-    // The home page includes a small go_router example route.
-    await tester.tap(find.text('Open API demo'));
+    await tester.tap(find.text(t.app.openApiDemo));
     await tester.pumpAndSettle();
 
-    // Successful navigation proves TemplateApp is using MaterialApp.router and
-    // the API demo route is registered.
-    expect(find.text('Todo Demo'), findsOneWidget);
+    expect(find.text(t.todoDemo.title), findsOneWidget);
   });
+}
+
+class _SignedInAuthNotifier extends AuthNotifier {
+  @override
+  Future<AuthStatus> build() async => AuthStatus.signedIn;
 }

@@ -38,7 +38,7 @@ void main() {
     expect(dio.options.sendTimeout, const Duration(seconds: 10));
     // The shared Dio instance should log network activity through AppLogger.
     expect(dio.interceptors.whereType<DioLoggingInterceptor>(), hasLength(1));
-    // The shared Dio instance should normalize DioException into ApiException.
+    // Auth + refresh + error normalization are shared for all API calls.
     expect(dio.interceptors.whereType<ErrorInterceptor>(), hasLength(1));
   });
 }
