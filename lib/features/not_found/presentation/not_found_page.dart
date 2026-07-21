@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../i18n/strings.g.dart';
 
 class NotFoundPage extends StatelessWidget {
   const NotFoundPage({super.key, this.location});
@@ -15,9 +16,10 @@ class NotFoundPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final requestedLocation = location;
+    final t = context.t.notFound;
 
     return AppScaffold(
-      title: 'Page not found',
+      title: t.title,
       leading: BackButton(onPressed: () => _goBack(context)),
       body: Column(
         mainAxisSize: MainAxisSize.min,
@@ -25,15 +27,15 @@ class NotFoundPage extends StatelessWidget {
           Icon(Icons.travel_explore, size: 72, color: colorScheme.primary),
           const SizedBox(height: AppSpacing.s24),
           Text(
-            'Page not found',
+            t.title,
             style: textTheme.headlineMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.s12),
           Text(
             requestedLocation == null
-                ? 'The page you requested does not exist.'
-                : 'No route matches $requestedLocation.',
+                ? t.description
+                : t.noRoute(location: requestedLocation),
             style: textTheme.bodyLarge,
             textAlign: TextAlign.center,
           ),

@@ -6,8 +6,11 @@ class TodoRepository {
 
   final TodoApi _api;
 
-  Future<Todo> fetchTodo(int id) async {
+  Future<Todo?> fetchTodo(int id) async {
     final json = await _api.fetchTodo(id);
+    if (json.isEmpty) {
+      return null;
+    }
     return Todo.fromJson(json);
   }
 }
