@@ -1,5 +1,6 @@
 {
   "APP_NAME": "Flutter Template",
   "APP_ENV": "dev",
-  "API_BASE_URL": "https://api-dev.example.com"
+  "API_BASE_URL": "https://jsonplaceholder.typicode.com",
+  "USE_MOCK_API": true
 }
