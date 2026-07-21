@@ -34,7 +34,8 @@ void main(List<String> args) {
   final projectName = options.requiredValue('project-name');
   final displayName = options.requiredValue('display-name');
   final androidPackage = options.requiredValue('android-package');
-  final iosBundleId = options.value('ios-bundle-id') ?? _iosBundleIdFrom(androidPackage);
+  final iosBundleId =
+      options.value('ios-bundle-id') ?? _iosBundleIdFrom(androidPackage);
 
   _validateProjectName(projectName);
   _validateAndroidPackage(androidPackage);
@@ -47,7 +48,10 @@ void main(List<String> args) {
   ]);
 
   final replacements = [
-    MapEntry('com.example.flutterTemplate.RunnerTests', '$iosBundleId.RunnerTests'),
+    MapEntry(
+      'com.example.flutterTemplate.RunnerTests',
+      '$iosBundleId.RunnerTests',
+    ),
     MapEntry(_oldAndroidPackage, androidPackage),
     MapEntry(_oldIosBundleId, iosBundleId),
     MapEntry(_oldDisplayName, displayName),
@@ -72,24 +76,33 @@ void main(List<String> args) {
     _replaceInFile(path, replacements);
   }
 
-  final oldMainActivity = File('android/app/src/main/kotlin/com/example/flutter_template/MainActivity.kt');
-  final newMainActivity = File('android/app/src/main/kotlin/${androidPackage.replaceAll('.', '/')}/MainActivity.kt');
+  final oldMainActivity = File(
+    'android/app/src/main/kotlin/com/example/flutter_template/MainActivity.kt',
+  );
+  final newMainActivity = File(
+    'android/app/src/main/kotlin/${androidPackage.replaceAll('.', '/')}/MainActivity.kt',
+  );
 
   if (oldMainActivity.existsSync()) {
-    _replaceInFile(oldMainActivity.path, [MapEntry(_oldAndroidPackage, androidPackage)]);
+    _replaceInFile(oldMainActivity.path, [
+      MapEntry(_oldAndroidPackage, androidPackage),
+    ]);
     newMainActivity.parent.createSync(recursive: true);
     oldMainActivity.renameSync(newMainActivity.path);
-    _deleteEmptyParents(Directory('android/app/src/main/kotlin/com/example/flutter_template'));
+    _deleteEmptyParents(
+      Directory('android/app/src/main/kotlin/com/example/flutter_template'),
+    );
   } else if (newMainActivity.existsSync()) {
-    _replaceInFile(newMainActivity.path, [MapEntry(_oldAndroidPackage, androidPackage)]);
+    _replaceInFile(newMainActivity.path, [
+      MapEntry(_oldAndroidPackage, androidPackage),
+    ]);
   } else {
     stderr.writeln('Warning: MainActivity.kt was not found.');
   }
 
-  _deleteIfExists(File('flutter_template.iml'));
   _deleteIfExists(Directory('.idea'));
-  _deleteIfExists(File('android/flutter_template_android.iml'));
   _deleteIfExists(Directory('android/.idea'));
+  _replaceTemplateModuleFiles(projectName);
 
   stdout
     ..writeln('Project template renamed.')
@@ -100,17 +113,23 @@ void main(List<String> args) {
     ..writeln()
     ..writeln('Next steps:')
     ..writeln('  flutter clean')
-    ..writeln('  flutter pub get');
+    ..writeln('  flutter pub get')
+    ..writeln('  Reopen the project root in Android Studio');
 }
 
 void _ensureProjectRoot() {
   final pubspec = File('pubspec.yaml');
   if (!pubspec.existsSync()) {
-    _fail('pubspec.yaml was not found. Run this script from the Flutter project root.');
+    _fail(
+      'pubspec.yaml was not found. Run this script from the Flutter project root.',
+    );
   }
 }
 
-void _replaceInFile(String path, Iterable<MapEntry<String, String>> replacements) {
+void _replaceInFile(
+  String path,
+  Iterable<MapEntry<String, String>> replacements,
+) {
   final file = File(path);
   if (!file.existsSync()) {
     stderr.writeln('Warning: $path was not found.');
@@ -130,11 +149,45 @@ void _deleteIfExists(FileSystemEntity entity) {
   }
 }
 
+void _replaceTemplateModuleFiles(String projectName) {
+  _renameOrCreateRootModuleFile(projectName);
+  _renameOrCreateAndroidModuleFile(projectName);
+}
+
+void _renameOrCreateRootModuleFile(String projectName) {
+  final oldFile = File('$_oldProjectName.iml');
+  final newFile = File('$projectName.iml');
+
+  if (oldFile.existsSync()) {
+    oldFile.renameSync(newFile.path);
+    return;
+  }
+
+  if (!newFile.existsSync()) {
+    newFile.writeAsStringSync(_rootModuleFile);
+  }
+}
+
+void _renameOrCreateAndroidModuleFile(String projectName) {
+  final oldFile = File('android/${_oldProjectName}_android.iml');
+  final newFile = File('android/${projectName}_android.iml');
+
+  if (oldFile.existsSync()) {
+    oldFile.renameSync(newFile.path);
+    return;
+  }
+
+  if (!newFile.existsSync()) {
+    newFile.writeAsStringSync(_androidModuleFile);
+  }
+}
+
 void _deleteEmptyParents(Directory directory) {
   var current = directory;
   final stopAt = Directory('android/app/src/main/kotlin').absolute.path;
 
-  while (current.absolute.path.startsWith(stopAt) && current.absolute.path != stopAt) {
+  while (current.absolute.path.startsWith(stopAt) &&
+      current.absolute.path != stopAt) {
     if (!current.existsSync()) {
       current = current.parent;
       continue;
@@ -173,7 +226,9 @@ String _iosBundleIdFrom(String androidPackage) {
 
 void _validateProjectName(String value) {
   if (!RegExp(r'^[a-z][a-z0-9_]*$').hasMatch(value)) {
-    _fail('project-name must be a valid Dart package name, for example my_app.');
+    _fail(
+      'project-name must be a valid Dart package name, for example my_app.',
+    );
   }
 }
 
@@ -182,7 +237,9 @@ void _validateAndroidPackage(String value) {
   final parts = value.split('.');
 
   if (parts.length < 2 || parts.any((part) => !segment.hasMatch(part))) {
-    _fail('android-package must be a valid Android package, for example com.example.my_app.');
+    _fail(
+      'android-package must be a valid Android package, for example com.example.my_app.',
+    );
   }
 }
 
@@ -271,4 +328,54 @@ Options:
   --display-name      App name shown on Android launcher and iOS Home Screen.
   --android-package   Android namespace and applicationId.
   --ios-bundle-id     Optional. Defaults to android-package with underscores changed to hyphens.
+''';
+
+const _rootModuleFile = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://\$MODULE_DIR\$">
+      <excludeFolder url="file://\$MODULE_DIR\$/.dart_tool" />
+      <excludeFolder url="file://\$MODULE_DIR\$/.pub" />
+      <excludeFolder url="file://\$MODULE_DIR\$/build" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Dart SDK" level="project" />
+    <orderEntry type="library" name="Dart Packages" level="project" />
+    <orderEntry type="library" name="Flutter Plugins" level="project" />
+  </component>
+</module>
+''';
+
+const _androidModuleFile = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="android" name="Android">
+      <configuration>
+        <option name="ALLOW_USER_CONFIGURATION" value="false" />
+        <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/gen" />
+        <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/gen" />
+        <option name="MANIFEST_FILE_RELATIVE_PATH" value="/app/src/main/AndroidManifest.xml" />
+        <option name="RES_FOLDER_RELATIVE_PATH" value="/app/src/main/res" />
+        <option name="ASSETS_FOLDER_RELATIVE_PATH" value="/app/src/main/assets" />
+        <option name="LIBS_FOLDER_RELATIVE_PATH" value="/app/src/main/libs" />
+        <option name="PROGUARD_LOGS_FOLDER_RELATIVE_PATH" value="/app/src/main/proguard_logs" />
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://\$MODULE_DIR\$">
+      <sourceFolder url="file://\$MODULE_DIR\$/app/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://\$MODULE_DIR\$/app/src/main/kotlin" isTestSource="false" />
+      <sourceFolder url="file://\$MODULE_DIR\$/gen" isTestSource="false" generated="true" />
+    </content>
+    <orderEntry type="jdk" jdkName="Android API 24 Platform" jdkType="Android SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Flutter for Android" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+  </component>
+</module>
 ''';
