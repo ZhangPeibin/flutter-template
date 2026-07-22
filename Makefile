@@ -1,4 +1,4 @@
-.PHONY: bootstrap run-dev run-staging run-prod analyze test clean get
+.PHONY: bootstrap run-dev run-staging run-prod analyze test clean get hooks
 
 bootstrap:
 	@if [ ! -f config/prod.json ]; then \
@@ -28,3 +28,6 @@ clean:
 
 get:
 	flutter pub get
+
+hooks:
+	lefthook install

@@ -117,7 +117,16 @@ tool/
    dart run slang   # 若改过 i18n JSON
    ```
 
-4. 初始化 Git
+4. 安装 Git hooks
+
+   ```bash
+   brew install lefthook   # 若未安装
+   make hooks
+   ```
+
+   安装后每次 `git commit` 自动跑 `flutter analyze`，每次 `git push` 自动跑 `flutter test`。
+
+5. 初始化 Git
 
    ```bash
    dart run tool/init_git.dart

@@ -1,0 +1,13 @@
+# pre-commit: fast checks only — runs on every commit
+pre-commit:
+  commands:
+    analyze:
+      run: flutter analyze
+      fail_text: "flutter analyze failed. Fix the issues above before committing."
+
+# pre-push: slower checks — runs before every push
+pre-push:
+  commands:
+    test:
+      run: flutter test
+      fail_text: "flutter test failed. Fix the failing tests before pushing."
