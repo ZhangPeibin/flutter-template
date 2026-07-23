@@ -1,8 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/core/startup/app_install_guard.dart';
 import 'package:flutter_template/core/storage/key_value_storage.dart';
 import 'package:flutter_template/core/storage/secure_storage.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('clears secure storage on first install then sets marker', () async {
@@ -24,8 +23,7 @@ void main() {
   test('no-ops when install marker already exists', () async {
     final prefs = _MemoryKeyValueStorage()
       ..setBoolSync(AppInstallGuard.installMarkerKey, true);
-    final secure = _MemorySecureStorage()
-      ..writeSync('access.token', 'keep-me');
+    final secure = _MemorySecureStorage()..writeSync('access.token', 'keep-me');
 
     await AppInstallGuard(
       keyValueStorage: prefs,

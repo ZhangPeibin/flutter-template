@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/features/app_update/data/app_version_repository.dart';
 import 'package:flutter_template/features/app_update/data/dto/app_version_check_dto.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('mock repository returns optional and force update variants', () async {

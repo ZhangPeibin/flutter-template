@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/app/app.dart';
 import 'package:flutter_template/core/config/app_config.dart';
 import 'package:flutter_template/core/providers/app_config_provider.dart';
@@ -8,6 +6,7 @@ import 'package:flutter_template/features/auth/providers/auth_notifier.dart';
 import 'package:flutter_template/features/todo_demo/domain/todo.dart';
 import 'package:flutter_template/features/todo_demo/providers/todo_demo_providers.dart';
 import 'package:flutter_template/i18n/strings.g.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import 'support/i18n_test_helpers.dart';
 
@@ -27,12 +26,7 @@ void main() {
           authNotifierProvider.overrideWith(_SignedInAuthNotifier.new),
           demoTodoProvider.overrideWithValue(
             const AsyncValue.data(
-              Todo(
-                id: 1,
-                userId: 1,
-                title: 'Test todo',
-                completed: false,
-              ),
+              Todo(id: 1, userId: 1, title: 'Test todo', completed: false),
             ),
           ),
         ],

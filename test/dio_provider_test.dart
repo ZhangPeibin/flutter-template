@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/core/config/app_config.dart';
 import 'package:flutter_template/core/logging/app_logger.dart';
 import 'package:flutter_template/core/network/dio_logging_interceptor.dart';
@@ -8,6 +6,7 @@ import 'package:flutter_template/core/network/error_interceptor.dart';
 import 'package:flutter_template/core/providers/app_config_provider.dart';
 import 'package:flutter_template/core/providers/dio_provider.dart';
 import 'package:flutter_template/core/providers/logger_provider.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('creates Dio from app config', () {

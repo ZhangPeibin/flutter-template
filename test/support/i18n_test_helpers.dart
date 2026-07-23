@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/i18n/strings.g.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 Future<void> pumpWithTranslations(
   WidgetTester tester, {
@@ -9,11 +8,7 @@ Future<void> pumpWithTranslations(
   AppLocale locale = AppLocale.en,
 }) async {
   await LocaleSettings.setLocale(locale);
-  await tester.pumpWidget(
-    TranslationProvider(
-      child: MaterialApp(home: child),
-    ),
-  );
+  await tester.pumpWidget(TranslationProvider(child: MaterialApp(home: child)));
 }
 
 Future<void> pumpTemplateApp(
@@ -22,7 +17,5 @@ Future<void> pumpTemplateApp(
   AppLocale locale = AppLocale.en,
 }) async {
   await LocaleSettings.setLocale(locale);
-  await tester.pumpWidget(
-    TranslationProvider(child: app),
-  );
+  await tester.pumpWidget(TranslationProvider(child: app));
 }

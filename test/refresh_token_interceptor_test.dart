@@ -2,12 +2,11 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/core/logging/app_logger.dart';
 import 'package:flutter_template/core/network/refresh_token_interceptor.dart';
 import 'package:flutter_template/core/storage/secure_storage.dart';
 import 'package:flutter_template/core/storage/storage_keys.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('refresh interceptor retries once after 401', () async {
@@ -20,9 +19,8 @@ void main() {
       _AdapterResult.json(200, '{"ok":true}'),
     ]);
 
-    final dio = Dio(
-      BaseOptions(baseUrl: 'https://api.example.com'),
-    )..httpClientAdapter = adapter;
+    final dio = Dio(BaseOptions(baseUrl: 'https://api.example.com'))
+      ..httpClientAdapter = adapter;
 
     dio.interceptors.add(
       RefreshTokenInterceptor(
@@ -32,10 +30,7 @@ void main() {
         refreshPath: '/auth/refresh',
         refreshTokens: (refreshToken) async {
           expect(refreshToken, 'refresh-token');
-          return (
-            accessToken: 'new-access',
-            refreshToken: 'refresh-token',
-          );
+          return (accessToken: 'new-access', refreshToken: 'refresh-token');
         },
       ),
     );

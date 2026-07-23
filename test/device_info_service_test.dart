@@ -1,14 +1,13 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-
 import 'package:flutter_template/core/config/app_config.dart';
 import 'package:flutter_template/core/device/device_info_service.dart';
 import 'package:flutter_template/core/network/device_info_interceptor.dart';
 import 'package:flutter_template/core/storage/secure_storage.dart';
 import 'package:flutter_template/core/storage/storage_keys.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() {
   test('reuses a stable install_id across header builds', () async {
@@ -28,26 +27,34 @@ void main() {
       ),
     );
 
-    final first = jsonDecode(await service.headerValue()) as Map<String, dynamic>;
+    final first =
+        jsonDecode(await service.headerValue()) as Map<String, dynamic>;
     service.resetCacheForTesting();
-    final second = jsonDecode(await service.headerValue()) as Map<String, dynamic>;
+    final second =
+        jsonDecode(await service.headerValue()) as Map<String, dynamic>;
 
     expect(first['install_id'], isA<String>());
     expect(first['install_id'], isNotEmpty);
     expect(second['install_id'], first['install_id']);
-    expect(await storage.read(StorageKeys.deviceInstallId), first['install_id']);
+    expect(
+      await storage.read(StorageKeys.deviceInstallId),
+      first['install_id'],
+    );
     expect(first['app_name'], 'Test App');
     expect(first['schema_version'], 1);
   });
 
   test('interceptor attaches deviceInfo header', () async {
-    final reader = _FakeDeviceInfoReader('{"schema_version":1}');
-    final interceptor = DeviceInfoInterceptor(reader);
+    const reader = _FakeDeviceInfoReader('{"schema_version":1}');
+    const interceptor = DeviceInfoInterceptor(reader);
     final options = RequestOptions(path: '/ping');
 
     await interceptor.onRequest(options, _NoOpRequestHandler());
 
-    expect(options.headers[DeviceInfoService.headerName], '{"schema_version":1}');
+    expect(
+      options.headers[DeviceInfoService.headerName],
+      '{"schema_version":1}',
+    );
   });
 }
 

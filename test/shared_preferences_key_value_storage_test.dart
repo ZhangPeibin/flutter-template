@@ -1,7 +1,6 @@
+import 'package:flutter_template/core/storage/shared_preferences_key_value_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:flutter_template/core/storage/shared_preferences_key_value_storage.dart';
 
 void main() {
   // Required so the SharedPreferences platform channel mock is wired before any

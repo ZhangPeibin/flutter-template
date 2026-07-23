@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/core/storage/flutter_secure_storage_adapter.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   // The adapter delegates to FlutterSecureStorage, which talks to the platform
@@ -9,9 +8,7 @@ void main() {
   // exercise the adapter without a real keystore.
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel(
-    'plugins.it_nomads.com/flutter_secure_storage',
-  );
+  const channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
 

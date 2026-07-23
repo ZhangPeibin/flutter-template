@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/features/not_found/presentation/not_found_page.dart';
 import 'package:flutter_template/i18n/strings.g.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import 'support/i18n_test_helpers.dart';
 

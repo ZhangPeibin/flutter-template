@@ -1,8 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/core/errors/app_error_localizer.dart';
 import 'package:flutter_template/core/network/api_exception.dart';
 import 'package:flutter_template/i18n/strings.g.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   setUp(() async {

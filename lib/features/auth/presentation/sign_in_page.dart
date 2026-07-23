@@ -28,6 +28,7 @@ class SignInPage extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.s24),
           AppButton(
+            key: const Key('signIn.devButton'),
             label: t.devSignIn,
             onPressed: isBusy
                 ? null

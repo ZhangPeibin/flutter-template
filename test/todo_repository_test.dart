@@ -1,11 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/features/todo_demo/data/api/todo_api.dart';
 import 'package:flutter_template/features/todo_demo/data/repositories/todo_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('maps API json to Todo domain model', () async {
-    final repository = TodoRepository(
+    const repository = TodoRepository(
       _FakeTodoApi({
         'userId': 1,
         'id': 1,
@@ -23,7 +22,7 @@ void main() {
   });
 
   test('returns null for empty mock payloads', () async {
-    final repository = TodoRepository(const _FakeTodoApi({}));
+    const repository = TodoRepository(_FakeTodoApi({}));
 
     expect(await repository.fetchTodo(0), isNull);
   });

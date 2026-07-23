@@ -24,6 +24,7 @@ class HomePage extends ConsumerWidget {
     final t = context.t;
 
     return AppScaffold(
+      key: const Key('home.page'),
       title: config.appName,
       body: SingleChildScrollView(
         child: Column(

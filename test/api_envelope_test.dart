@@ -1,8 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/core/network/api_envelope.dart';
 import 'package:flutter_template/core/network/api_exception.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('unwraps successful envelope data', () {
@@ -25,11 +24,7 @@ void main() {
       () => unwrapApiData(
         Response<Map<String, dynamic>>(
           requestOptions: RequestOptions(path: '/x'),
-          data: {
-            'code': 10001,
-            'message': 'invalid',
-            'data': null,
-          },
+          data: {'code': 10001, 'message': 'invalid', 'data': null},
         ),
       ),
       throwsA(

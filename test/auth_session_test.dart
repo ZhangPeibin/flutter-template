@@ -1,23 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
+import 'package:flutter_template/core/providers/secure_storage_provider.dart';
 import 'package:flutter_template/core/storage/secure_storage.dart';
 import 'package:flutter_template/core/storage/storage_keys.dart';
 import 'package:flutter_template/features/auth/data/session_repository.dart';
 import 'package:flutter_template/features/auth/providers/auth_notifier.dart';
-import 'package:flutter_template/core/providers/secure_storage_provider.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('dev sign-in writes tokens and marks session signed in', () async {
     final storage = _MemorySecureStorage();
     final container = ProviderContainer(
-      overrides: [
-        secureStorageProvider.overrideWithValue(storage),
-      ],
+      overrides: [secureStorageProvider.overrideWithValue(storage)],
     );
     addTearDown(container.dispose);
 
-    expect(await container.read(authNotifierProvider.future), AuthStatus.signedOut);
+    expect(
+      await container.read(authNotifierProvider.future),
+      AuthStatus.signedOut,
+    );
 
     await container.read(authNotifierProvider.notifier).devSignIn();
 
@@ -31,10 +31,7 @@ void main() {
     final repository = SessionRepository(storage);
 
     expect(await repository.hasSession(), isFalse);
-    await repository.saveSession(
-      accessToken: 'token',
-      refreshToken: 'refresh',
-    );
+    await repository.saveSession(accessToken: 'token', refreshToken: 'refresh');
     expect(await repository.hasSession(), isTrue);
   });
 }

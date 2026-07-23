@@ -1,6 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_template/features/webview/domain/webview_host_policy.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   const policy = WebViewHostPolicy(
