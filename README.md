@@ -2,6 +2,41 @@
 
 一个可复用的 Flutter 基础项目模板，用于快速启动新的 Android / iOS Flutter App。
 
+## 定位
+
+**一个 AI-native 的移动端（Android / iOS）团队级 App 地基**：用可执行检查把工程规范
+固化下来，作为多个业务 App 的统一起点；内置通用平台能力，且各集成点可替换
+（batteries-included but swappable）。
+
+它明确「是什么」：
+
+- **团队级基础设施，不是一次性脚手架**：架构边界由 `tool/architecture_check.dart`
+  强制、`make check` 本地与 CI 同构、Agent 约束统一指向
+  [工程规范](docs/engineering-standards.md)。这些投入只有在「多人 / 多 App / 长期
+  维护」时才划算。
+- **平台能力层，不是业务层**：提供每个 App 都要重造的通用轮子（Auth 骨架、网络栈、
+  i18n、存储抽象等），业务逻辑留白（`todo_demo` 是可删示例）。
+- **AI-native**：不仅有「不能做什么」的可执行拦截，还有「该怎么做」的建设层——
+  [Agent Playbook](docs/agent/agent-playbook.md) + 脚手架生成器
+  `dart run tool/new_feature.dart <name>`，让 agent / 新成员一次写对。
+
+它明确「不是什么」：
+
+- 不做全平台：仅 Android / iOS，`web` / `windows` / `linux` / `macos` 被规范禁止并由
+  检查器拦截。
+- 不绑业务 / 品牌：主题色、图标、Auth 均为中性占位。
+- 不追大而全：可选能力（推送 / 分析 / 深链等）单列在
+  [可选能力 Skills](docs/agent/optional-capability-skills.md)，按需再实现。
+
+### 关键设计取舍（开放项）
+
+- **模板路线**：通过「复制 + `setup_project.dart`」派生新 App，各 App 可自由魔改；
+  代价是模板升级不会回流到已派生的 App。若未来 App 数量显著增长，可再评估把 `core/`
+  抽为内部共享包。
+- **codegen（待定）**：数据模型与 provider 当前为**手写实现（最小化）**，未引入
+  `freezed` / `json_serializable` / `riverpod_generator`。codegen 作为**可选升级路径**
+  保留，尚未拍板；一旦切换，需同步更新生成器模板与 Agent Playbook。
+
 ## 目标
 
 - 保持基础工程可直接运行（多环境 + demo）。
@@ -69,6 +104,9 @@ lib/
     zh.i18n.json
   main.dart
 docs/
+  agent/
+    agent-playbook.md
+    optional-capability-skills.md
   branding.md
   device-info-header.md
   engineering-standards.md
@@ -77,13 +115,13 @@ docs/
   release.md
   template-usage.md
   toolchain.md
-  skills/optional-capability-skills.md
 config/
   dev.json
   staging.json
   prod.example.json
 tool/
   setup_project.dart
+  new_feature.dart
   init_git.dart
 ```
 
@@ -91,13 +129,14 @@ tool/
 
 1. [README](README.md)：项目能力、目录结构和常用命令总览。
 2. [工程规范](docs/engineering-standards.md)：代码分层、Agent 约束、测试与质量门禁。
-3. [模板使用](docs/template-usage.md)：如何从模板初始化新 App。
-4. [环境与 Flavor](docs/flavors.md)：`dev` / `staging` / `prod` 与 `debug` / `profile` / `release`。
-5. [发布流程](docs/release.md)：Release Preflight、签名和 APK / AAB / IPA 构建。
-6. [工具链](docs/toolchain.md)：FVM、GitHub Actions 和 Git hooks。
-7. [品牌资源](docs/branding.md)：应用图标和启动图替换。
-8. [可观测性](docs/observability.md)：日志、脱敏、错误上报及第三方接入点。
-9. [可选能力 Skills](docs/skills/optional-capability-skills.md)：后续按需实现的能力。
+3. [Agent Playbook](docs/agent/agent-playbook.md)：常见任务（feature / API / 路由 / provider / i18n / 测试）的正确写法。
+4. [模板使用](docs/template-usage.md)：如何从模板初始化新 App。
+5. [环境与 Flavor](docs/flavors.md)：`dev` / `staging` / `prod` 与 `debug` / `profile` / `release`。
+6. [发布流程](docs/release.md)：Release Preflight、签名和 APK / AAB / IPA 构建。
+7. [工具链](docs/toolchain.md)：FVM、GitHub Actions 和 Git hooks。
+8. [品牌资源](docs/branding.md)：应用图标和启动图替换。
+9. [可观测性](docs/observability.md)：日志、脱敏、错误上报及第三方接入点。
+10. [可选能力 Skills](docs/agent/optional-capability-skills.md)：后续按需实现的能力。
 
 快速使用模板先看 `README -> 模板使用 -> 环境与 Flavor`；准备发布时再看
 `发布流程`。
@@ -183,6 +222,7 @@ flutter run --flavor dev --dart-define-from-file=config/dev.json
 | `make preflight-prod` | 检查生产配置和模板标识 |
 | `make preflight-android` / `preflight-ios` | 检查平台发布前置条件 |
 | `make doctor` | 检查工具链、平台和必要配置 |
+| `make new-feature name=xxx` | 脚手架生成分层 feature（见 [Agent Playbook](docs/agent/agent-playbook.md)） |
 | `make check` | 运行格式、生成代码、架构、工具链、分析和测试检查 |
 | `make fix` | 应用 Dart 自动修复、格式化并重新生成翻译代码 |
 | `make analyze` / `make test` / `make clean` | 质量检查与清理 |
@@ -404,9 +444,10 @@ GitHub Actions 会执行格式、生成代码、Doctor、Analyze、测试和 And
 
 ## 工程文档
 
+- [Agent Playbook（常见任务正确写法）](docs/agent/agent-playbook.md)
 - [模板创建与安全复制](docs/template-usage.md)
 - [多环境与 Flavor](docs/flavors.md)
 - [发布与签名](docs/release.md)
 - [图标与启动页](docs/branding.md)
 - [工具链](docs/toolchain.md)
-- [可选能力 Skill 规划](docs/skills/optional-capability-skills.md)
+- [可选能力 Skill 规划](docs/agent/optional-capability-skills.md)

@@ -3,7 +3,7 @@
         preflight-prod preflight-android preflight-ios \
         check fix format-check generated-check architecture-check \
         analyze test integration-test coverage doctor doctor-ci \
-        gen clean get hooks icons splash
+        gen clean get hooks icons splash new-feature
 
 # ── Environment bootstrap ─────────────────────────────────────────────────────
 
@@ -156,6 +156,14 @@ icons:
 
 splash:
 	dart run flutter_native_splash:create
+
+# ── Scaffolding ──────────────────────────────────────────────────────────────
+
+# Scaffold a new feature under lib/features/<name>/ (see docs/agent/agent-playbook.md).
+# Usage: make new-feature name=my_feature [ui_only=1]
+new-feature:
+	@test -n "$(name)" || (echo "Usage: make new-feature name=<feature_name> [ui_only=1]" && exit 64)
+	dart run tool/new_feature.dart $(name) $(if $(ui_only),--ui-only,)
 
 # ── Setup ────────────────────────────────────────────────────────────────────
 
