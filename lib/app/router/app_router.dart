@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/providers/app_config_provider.dart';
 import '../../features/auth/presentation/sign_in_page.dart';
 import '../../features/auth/providers/auth_notifier.dart';
 import '../../features/home/presentation/home_page.dart';
@@ -11,7 +12,6 @@ import '../../features/settings/presentation/language_page.dart';
 import '../../features/todo_demo/presentation/todo_demo_page.dart';
 import '../../features/webview/domain/webview_host_policy.dart';
 import '../../features/webview/presentation/web_view_page.dart';
-import '../../core/providers/app_config_provider.dart';
 
 class AppRoutePaths {
   const AppRoutePaths._();
@@ -34,10 +34,7 @@ class AppRouteNames {
   static const webView = 'webView';
 }
 
-final _publicRoutePaths = <String>{
-  AppRoutePaths.loading,
-  AppRoutePaths.signIn,
-};
+final _publicRoutePaths = <String>{AppRoutePaths.loading, AppRoutePaths.signIn};
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshListenable = _AuthRefreshListenable(ref);
@@ -71,9 +68,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
       return null;
     },
-    errorBuilder: (context, state) => NotFoundPage(
-      location: state.uri.toString(),
-    ),
+    errorBuilder: (context, state) =>
+        NotFoundPage(location: state.uri.toString()),
     routes: [
       GoRoute(
         path: AppRoutePaths.loading,

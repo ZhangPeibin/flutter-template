@@ -9,8 +9,9 @@ final sessionRepositoryProvider = Provider<SessionRepository>((ref) {
   return SessionRepository(ref.watch(secureStorageProvider));
 });
 
-final authNotifierProvider =
-    AsyncNotifierProvider<AuthNotifier, AuthStatus>(AuthNotifier.new);
+final authNotifierProvider = AsyncNotifierProvider<AuthNotifier, AuthStatus>(
+  AuthNotifier.new,
+);
 
 class AuthNotifier extends AsyncNotifier<AuthStatus> {
   @override
@@ -21,10 +22,12 @@ class AuthNotifier extends AsyncNotifier<AuthStatus> {
 
   /// Local-only sign-in that writes fake tokens for router / interceptor demos.
   Future<void> devSignIn() async {
-    await ref.read(sessionRepositoryProvider).saveSession(
-      accessToken: 'dev-access-token',
-      refreshToken: 'dev-refresh-token',
-    );
+    await ref
+        .read(sessionRepositoryProvider)
+        .saveSession(
+          accessToken: 'dev-access-token',
+          refreshToken: 'dev-refresh-token',
+        );
     state = const AsyncData(AuthStatus.signedIn);
   }
 

@@ -9,11 +9,9 @@ import '../../../core/network/refresh_token_interceptor.dart';
 /// JSON response containing `accessToken` (and optional `refreshToken`).
 /// Replace this in product apps if your envelope differs.
 class TokenRefreshClient {
-  const TokenRefreshClient({
-    required Dio dio,
-    required String refreshPath,
-  }) : _dio = dio,
-       _refreshPath = refreshPath;
+  const TokenRefreshClient({required Dio dio, required String refreshPath})
+    : _dio = dio,
+      _refreshPath = refreshPath;
 
   final Dio _dio;
   final String _refreshPath;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -45,41 +47,46 @@ class _WebViewPageState extends State<WebViewPage> {
       return;
     }
 
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onNavigationRequest: (request) {
-            final uri = Uri.tryParse(request.url);
-            if (uri == null || !widget.hostPolicy.isAllowed(uri)) {
-              return NavigationDecision.prevent;
-            }
-            return NavigationDecision.navigate;
-          },
-          onProgress: (progress) {
-            setState(() {
-              _progress = progress;
-            });
-          },
-          onPageStarted: (_) {
-            setState(() {
-              _error = null;
-              _progress = 0;
-            });
-          },
-          onPageFinished: (_) {
-            setState(() {
-              _progress = 100;
-            });
-          },
-          onWebResourceError: (error) {
-            setState(() {
-              _error = error;
-            });
-          },
-        ),
-      )
-      ..loadRequest(_uri!);
+    final controller = WebViewController();
+    _controller = controller;
+    unawaited(_configureController(controller));
+  }
+
+  Future<void> _configureController(WebViewController controller) async {
+    await controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+    await controller.setNavigationDelegate(
+      NavigationDelegate(
+        onNavigationRequest: (request) {
+          final uri = Uri.tryParse(request.url);
+          if (uri == null || !widget.hostPolicy.isAllowed(uri)) {
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
+        onProgress: (progress) {
+          setState(() {
+            _progress = progress;
+          });
+        },
+        onPageStarted: (_) {
+          setState(() {
+            _error = null;
+            _progress = 0;
+          });
+        },
+        onPageFinished: (_) {
+          setState(() {
+            _progress = 100;
+          });
+        },
+        onWebResourceError: (error) {
+          setState(() {
+            _error = error;
+          });
+        },
+      ),
+    );
+    await controller.loadRequest(_uri!);
   }
 
   @override
@@ -109,7 +116,9 @@ class _WebViewPageState extends State<WebViewPage> {
             setState(() {
               _error = null;
             });
-            controller?.reload();
+            if (controller != null) {
+              unawaited(controller.reload());
+            }
           },
         ),
         (true, final controller?, null) => Stack(

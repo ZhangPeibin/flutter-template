@@ -79,9 +79,7 @@ Future<T?> showAppBottomSheet<T>({
     isScrollControlled: isScrollControlled,
     useSafeArea: true,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(AppRadius.r16),
-      ),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r16)),
     ),
     builder: (context) => AppBottomSheet(child: builder(context)),
   );

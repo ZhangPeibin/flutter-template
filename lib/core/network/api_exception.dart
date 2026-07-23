@@ -47,7 +47,8 @@ class ApiException implements Exception {
         type: ApiExceptionType.cancelled,
         message: 'Request was cancelled',
       ),
-      DioExceptionType.badCertificate || DioExceptionType.unknown => ApiException(
+      DioExceptionType.badCertificate ||
+      DioExceptionType.unknown => ApiException(
         type: ApiExceptionType.unknown,
         message: error.message ?? 'Unexpected network error',
       ),

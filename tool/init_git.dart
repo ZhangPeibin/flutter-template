@@ -39,7 +39,9 @@ void main(List<String> args) {
 
 void _ensureProjectRoot() {
   if (!File('pubspec.yaml').existsSync()) {
-    _fail('pubspec.yaml was not found. Run this script from the Flutter project root.');
+    _fail(
+      'pubspec.yaml was not found. Run this script from the Flutter project root.',
+    );
   }
 }
 
@@ -126,8 +128,11 @@ class _Options {
       }
     }
 
-    if (initialBranch != null && !RegExp(r'^[A-Za-z0-9._/-]+$').hasMatch(initialBranch)) {
-      _fail('branch must contain only letters, numbers, dots, underscores, slashes, or hyphens.');
+    if (initialBranch != null &&
+        !RegExp(r'^[A-Za-z0-9._/-]+$').hasMatch(initialBranch)) {
+      _fail(
+        'branch must contain only letters, numbers, dots, underscores, slashes, or hyphens.',
+      );
     }
 
     if (message.trim().isEmpty) {

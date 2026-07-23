@@ -22,9 +22,11 @@ final appVersionRepositoryProvider = Provider<AppVersionRepository>((ref) {
   return RemoteAppVersionRepository(ref.watch(appVersionApiProvider));
 });
 
-final appVersionCheckProvider =
-    FutureProvider.family<AppVersionCheck, bool>((ref, forceUpdate) {
-      return ref
-          .watch(appVersionRepositoryProvider)
-          .checkVersion(forceUpdate: forceUpdate);
-    });
+final appVersionCheckProvider = FutureProvider.family<AppVersionCheck, bool>((
+  ref,
+  forceUpdate,
+) {
+  return ref
+      .watch(appVersionRepositoryProvider)
+      .checkVersion(forceUpdate: forceUpdate);
+});

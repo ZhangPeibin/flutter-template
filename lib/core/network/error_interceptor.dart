@@ -75,9 +75,7 @@ class ErrorInterceptor extends Interceptor {
     }
   }
 
-  void _dismissActiveGlobalErrorToast({
-    bool showRemoveAnimation = true,
-  }) {
+  void _dismissActiveGlobalErrorToast({bool showRemoveAnimation = true}) {
     AppToast.dismiss(
       _activeGlobalErrorToast,
       showRemoveAnimation: showRemoveAnimation,
