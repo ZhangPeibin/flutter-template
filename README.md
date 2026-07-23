@@ -69,7 +69,15 @@ lib/
     zh.i18n.json
   main.dart
 docs/
-  device-info-header-prd.md
+  branding.md
+  device-info-header.md
+  engineering-standards.md
+  flavors.md
+  observability.md
+  release.md
+  template-usage.md
+  toolchain.md
+  skills/optional-capability-skills.md
 config/
   dev.json
   staging.json
@@ -79,12 +87,27 @@ tool/
   init_git.dart
 ```
 
+## 推荐阅读顺序
+
+1. [README](README.md)：项目能力、目录结构和常用命令总览。
+2. [工程规范](docs/engineering-standards.md)：代码分层、Agent 约束、测试与质量门禁。
+3. [模板使用](docs/template-usage.md)：如何从模板初始化新 App。
+4. [环境与 Flavor](docs/flavors.md)：`dev` / `staging` / `prod` 与 `debug` / `profile` / `release`。
+5. [发布流程](docs/release.md)：Release Preflight、签名和 APK / AAB / IPA 构建。
+6. [工具链](docs/toolchain.md)：FVM、GitHub Actions 和 Git hooks。
+7. [品牌资源](docs/branding.md)：应用图标和启动图替换。
+8. [可观测性](docs/observability.md)：日志、脱敏、错误上报及第三方接入点。
+9. [可选能力 Skills](docs/skills/optional-capability-skills.md)：后续按需实现的能力。
+
+快速使用模板先看 `README -> 模板使用 -> 环境与 Flavor`；准备发布时再看
+`发布流程`。
+
 ## 从模板创建新项目
 
 1. 复制模板
 
    ```bash
-   rsync -a --exclude .git <template-dir>/ my_app/
+   rsync -a --exclude-from=<template-dir>/.templateignore <template-dir>/ my_app/
    cd my_app
    ```
 
@@ -124,7 +147,8 @@ tool/
    make hooks
    ```
 
-   安装后每次 `git commit` 自动跑 `flutter analyze`，每次 `git push` 自动跑 `flutter test`。
+   安装后每次 `git commit` 自动跑格式、架构和静态分析检查，每次 `git push`
+   自动跑完整的 `make check`。
 
 5. 初始化 Git
 
@@ -133,7 +157,7 @@ tool/
    # 或：dart run tool/init_git.dart --commit --message "Initial commit"
    ```
 
-5. 重新打开 IDE 项目根目录（不要只打开 `android/`）。
+6. 重新打开 IDE 项目根目录（不要只打开 `android/`）。
 
 业务 App 常见下一步：换主题 / API、删 `todo_demo`、在 `features/` 加自己的业务。
 
@@ -143,21 +167,35 @@ tool/
 flutter pub get
 make run-dev
 # 或：
-flutter run --dart-define-from-file=config/dev.json
+flutter run --flavor dev --dart-define-from-file=config/dev.json
 ```
 
 | 命令 | 作用 |
 | --- | --- |
 | `make get` | `flutter pub get` |
 | `make bootstrap` | 从 `prod.example.json` 生成本地 `prod.json`（若不存在） |
-| `make run-dev` / `run-staging` / `run-prod` | 按环境启动（prod 自动 bootstrap + release） |
+| `make run-dev` | 运行 `devDebug`，支持调试和 Hot Reload |
+| `make run-staging` | 运行 `stagingDebug`，连接测试环境 |
+| `make run-prod` | 运行 `prodRelease`，连接生产环境 |
+| `make build-apk-local` | 构建 `devRelease`，验证 Release 行为 |
+| `make build-appbundle` / `build-apk` | 构建 Android `prodRelease` |
+| `make build-ios` | 构建 iOS `Release-prod` IPA |
+| `make preflight-prod` | 检查生产配置和模板标识 |
+| `make preflight-android` / `preflight-ios` | 检查平台发布前置条件 |
+| `make doctor` | 检查工具链、平台和必要配置 |
+| `make check` | 运行格式、生成代码、架构、工具链、分析和测试检查 |
+| `make fix` | 应用 Dart 自动修复、格式化并重新生成翻译代码 |
 | `make analyze` / `make test` / `make clean` | 质量检查与清理 |
 
 VS Code 启动配置：`Flutter Dev` / `Flutter Staging` / `Flutter Prod`。
 
+代码分层、安全、测试及 Agent 协作要求统一定义在
+[工程规范](docs/engineering-standards.md)。CI 与本地都通过 `make check` 执行同一组约束。
+
 ## 多环境配置
 
-通过 `--dart-define-from-file` 注入：
+平台使用 `dev` / `staging` / `prod` Flavor，Dart 配置通过
+`--dart-define-from-file` 注入。完整说明见 [多环境文档](docs/flavors.md)：
 
 - `config/dev.json`
 - `config/staging.json`
@@ -176,7 +214,9 @@ VS Code 启动配置：`Flutter Dev` / `Flutter Staging` / `Flutter Prod`。
 | `APP_VERSION_CHECK_PATH` | 版本检查相对路径 | `/api/v1/app/version/check` |
 | `WEBVIEW_ALLOWED_HOSTS` | 逗号分隔 host allowlist | `example.com,www.example.com` |
 
-`APP_NAME` 影响 `MaterialApp.title` 等；Launcher 显示名仍由平台配置 / `setup_project` 决定。
+`APP_NAME` 影响 `MaterialApp.title` 等；Launcher 显示名仍由平台配置 / `setup_project`
+决定。`APP_ENV` 使用严格解析，并在启动时与原生 `appFlavor` 比较；缺失、拼写错误或
+环境错配都会阻止业务启动。生产构建检查详见 [发布与签名](docs/release.md)。
 
 ## 依赖一览
 
@@ -193,6 +233,7 @@ VS Code 启动配置：`Flutter Dev` / `Flutter Staging` / `Flutter Prod`。
 | `device_info_plus` / `package_info_plus` | DeviceInfo header |
 | `url_launcher` | 打开应用商店等外链 |
 | `webview_flutter` | 壳 WebView |
+| `flutter_launcher_icons` / `flutter_native_splash` | 图标与原生启动页生成 |
 
 ## 状态管理
 
@@ -295,7 +336,7 @@ context.pushNamed(AppRouteNames.profile);
 手动验收：
 
 ```bash
-flutter run --dart-define-from-file=config/dev.json
+flutter run --flavor dev --dart-define-from-file=config/dev.json
 ```
 
 1. Dev Sign In → 首页 → Todo Demo：Success / Empty / Error。
@@ -324,7 +365,9 @@ Text(context.t.common.retry);
 
 ## DeviceInfo
 
-出站请求（含 refresh）带 `deviceInfo` JSON header。字段约定见 `docs/device-info-header-prd.md`。`install_id` 首次生成后写入 Secure Storage，同一次安装内稳定；iOS 重装经 Install Guard 清空后会重新生成。
+出站请求（含 refresh）带 `deviceInfo` JSON header。字段约定见
+[DeviceInfo Header](docs/device-info-header.md)。`install_id` 首次生成后写入 Secure
+Storage，同一次安装内稳定；iOS 重装经 Install Guard 清空后会重新生成。
 
 ## App Update
 
@@ -336,7 +379,9 @@ Text(context.t.common.retry);
 
 ## 日志
 
-经 `AppLogger` / `loggerProvider` 使用，业务不要直接 `Logger()`。默认 `ConsoleAppLogger`；可换 Sentry 等适配器而不改调用方。Dio 日志走同一 provider。
+经 `AppLogger` / `loggerProvider` 使用，业务不要直接 `Logger()`。全局异常经
+`ErrorReporter` 转发，默认只写本地日志，不接入第三方平台。接入方式和脱敏规则见
+[异常与可观测性](docs/observability.md)。
 
 ## 本地存储
 
@@ -354,9 +399,14 @@ flutter analyze
 flutter test
 ```
 
-## 后续可选
+GitHub Actions 会执行格式、生成代码、Doctor、Analyze、测试和 Android debug 构建；
+仓库未启用 Actions 时不影响本地开发。
 
-- 接入 `sentry_flutter` 生产错误上报。
-- Android flavor / iOS scheme。
-- Mason 生成 feature / page / service。
-- 金融向 UI、加密工具等可作为独立 `lib/packs/*` opt-in（默认不启用）。
+## 工程文档
+
+- [模板创建与安全复制](docs/template-usage.md)
+- [多环境与 Flavor](docs/flavors.md)
+- [发布与签名](docs/release.md)
+- [图标与启动页](docs/branding.md)
+- [工具链](docs/toolchain.md)
+- [可选能力 Skill 规划](docs/skills/optional-capability-skills.md)
