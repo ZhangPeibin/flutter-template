@@ -6,6 +6,7 @@
       "request": "launch",
       "type": "dart",
       "toolArgs": [
+        "--flavor=dev",
         "--dart-define-from-file=config/dev.json"
       ]
     },
@@ -14,6 +15,7 @@
       "request": "launch",
       "type": "dart",
       "toolArgs": [
+        "--flavor=staging",
         "--dart-define-from-file=config/staging.json"
       ]
     },
@@ -23,6 +25,7 @@
       "type": "dart",
       "flutterMode": "release",
       "toolArgs": [
+        "--flavor=prod",
         "--dart-define-from-file=config/prod.json"
       ]
     }

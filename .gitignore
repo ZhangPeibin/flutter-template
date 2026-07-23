@@ -17,6 +17,7 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
+.claude/settings.local.json
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -46,3 +47,9 @@ app.*.map.json
 
 # Local production env (may contain secrets). Seed it from config/prod.example.json.
 /config/prod.json
+
+# Signing credentials and local export configuration
+/android/key.properties
+/android/*.jks
+/android/*.keystore
+/ios/ExportOptions.plist

@@ -65,10 +65,15 @@ void main(List<String> args) {
     'config/dev.json',
     'config/staging.json',
     'config/prod.example.json',
+    'config/prod.json',
+    'lib/i18n/en.i18n.json',
+    'lib/i18n/zh.i18n.json',
     'android/app/build.gradle.kts',
     'android/app/src/main/AndroidManifest.xml',
     'ios/Runner/Info.plist',
     'ios/Runner.xcodeproj/project.pbxproj',
+    ..._textFilesIn('ios/Flutter', extension: '.xcconfig'),
+    ..._textFilesIn('tool', extension: '.rb'),
     ..._dartFilesIn(['lib', 'test', 'integration_test']),
   };
 
@@ -114,6 +119,7 @@ void main(List<String> args) {
     ..writeln('Next steps:')
     ..writeln('  flutter clean')
     ..writeln('  flutter pub get')
+    ..writeln('  dart run slang')
     ..writeln('  Reopen the project root in Android Studio');
 }
 
@@ -215,6 +221,22 @@ Iterable<String> _dartFilesIn(List<String> directories) sync* {
         .where((file) => file.path.endsWith('.dart'))
         .map((file) => file.path);
   }
+}
+
+Iterable<String> _textFilesIn(
+  String directoryPath, {
+  required String extension,
+}) sync* {
+  final directory = Directory(directoryPath);
+  if (!directory.existsSync()) {
+    return;
+  }
+
+  yield* directory
+      .listSync(recursive: true)
+      .whereType<File>()
+      .where((file) => file.path.endsWith(extension))
+      .map((file) => file.path);
 }
 
 String _iosBundleIdFrom(String androidPackage) {
