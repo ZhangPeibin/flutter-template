@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../logging/app_logger.dart';
+import '../logging/sensitive_data_redactor.dart';
 
 class DioLoggingInterceptor extends Interceptor {
   const DioLoggingInterceptor(this._logger);
@@ -9,14 +10,20 @@ class DioLoggingInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    _logger.debug('${options.method} ${options.uri}');
+    _logger.debug(
+      '${options.method} ${SensitiveDataRedactor.uri(options.uri)}',
+    );
     handler.next(options);
   }
 
   @override
-  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
+  void onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) {
     _logger.debug(
-      '${response.requestOptions.method} ${response.requestOptions.uri} '
+      '${response.requestOptions.method} '
+      '${SensitiveDataRedactor.uri(response.requestOptions.uri)} '
       '-> ${response.statusCode}',
     );
     handler.next(response);
@@ -25,7 +32,8 @@ class DioLoggingInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     _logger.error(
-      '${err.requestOptions.method} ${err.requestOptions.uri} failed',
+      '${err.requestOptions.method} '
+      '${SensitiveDataRedactor.uri(err.requestOptions.uri)} failed',
       error: err.error ?? err,
       stackTrace: err.stackTrace,
     );

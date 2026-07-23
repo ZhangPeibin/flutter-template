@@ -5,9 +5,12 @@ enum AppEnvironment {
 
   static AppEnvironment parse(String value) {
     return switch (value) {
+      'dev' => AppEnvironment.dev,
       'staging' => AppEnvironment.staging,
       'prod' => AppEnvironment.prod,
-      _ => AppEnvironment.dev,
+      _ => throw FormatException(
+        'APP_ENV must be one of: dev, staging, prod. Received: "$value".',
+      ),
     };
   }
 }
@@ -30,7 +33,7 @@ class AppConfig {
           defaultValue: 'Flutter Template',
         ),
         environment: AppEnvironment.parse(
-          const String.fromEnvironment('APP_ENV', defaultValue: 'dev'),
+          const String.fromEnvironment('APP_ENV'),
         ),
         apiBaseUrl: const String.fromEnvironment(
           'API_BASE_URL',
