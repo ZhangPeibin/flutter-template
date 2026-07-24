@@ -61,6 +61,7 @@ void main(List<String> args) {
   final files = <String>{
     'pubspec.yaml',
     'README.md',
+    'README.zh-CN.md',
     '.vscode/launch.json',
     'config/dev.json',
     'config/staging.json',

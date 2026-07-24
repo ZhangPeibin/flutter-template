@@ -73,6 +73,7 @@ void _writeFixture(Directory root) {
   final files = <String, String>{
     'pubspec.yaml': 'name: flutter_template\n',
     'README.md': '# Flutter Template\n',
+    'README.zh-CN.md': '# Flutter Template\n',
     '.vscode/launch.json': '{"name":"flutter_template"}\n',
     'config/dev.json': '{"APP_NAME":"Flutter Template"}\n',
     'config/staging.json': '{"APP_NAME":"Flutter Template"}\n',
